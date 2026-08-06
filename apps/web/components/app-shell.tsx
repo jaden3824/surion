@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Home, Menu, Search, UserRound, Users, Wrench, X } from "lucide-react";
+import { Home, Menu, Search, UserRound, Users, Wrench, X } from "lucide-react";
 import { useState } from "react";
 import { BrandLogo } from "./brand-logo";
 
 const nav = [
-  { href: "/search", label: "커뮤니티" },
-  { href: "/search?status=RESOLVED", label: "해결 사례" },
-  { href: "/experts", label: "전문가" },
+  { href: "/search", label: "전체글보기" },
+  { href: "/resolved", label: "해결 사례" },
+  { href: "/experts", label: "전문가 찾기" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -27,15 +27,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <nav className="desktop-nav" aria-label="주요 메뉴">
             {nav.map((item) => <Link key={item.href} className={pathname.startsWith(item.href) ? "active" : ""} href={item.href}>{item.label}</Link>)}
           </nav>
-          <form className="header-search" role="search" onSubmit={(event) => { event.preventDefault(); if (headerQuery.trim()) router.push(`/search?q=${encodeURIComponent(headerQuery.trim())}`); }}>
+          <form className="header-search" action="/search" method="get" role="search" onSubmit={(event) => { event.preventDefault(); const submittedQuery = String(new FormData(event.currentTarget).get("q") ?? headerQuery).trim(); if (submittedQuery) router.push(`/search?q=${encodeURIComponent(submittedQuery)}`); }}>
             <Search />
-            <input value={headerQuery} onChange={(event) => setHeaderQuery(event.target.value)} placeholder="모델·증상 검색" aria-label="커뮤니티 검색" />
+            <input name="q" value={headerQuery} onChange={(event) => setHeaderQuery(event.target.value)} placeholder="모델·증상 검색" aria-label="커뮤니티 검색" />
           </form>
           <div className="header-actions">
-            <Link className="icon-button" href="/notifications" aria-label="알림"><Bell size={20} /><span className="notification-dot">3</span></Link>
             <Link className="button button-secondary header-login" href="/login">로그인</Link>
-            <Link className="button button-primary" href="/ask"><Wrench size={18} />질문하기</Link>
-            <button className="icon-button menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="메뉴 열기">{open ? <X /> : <Menu />}</button>
+            <Link className="button button-primary" href="/ask"><Wrench size={18} />질문 올리기</Link>
+            <button className="icon-button menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? "메뉴 닫기" : "메뉴 열기"}>{open ? <X /> : <Menu />}</button>
           </div>
         </div>
         {open && <nav className="mobile-menu" aria-label="모바일 메뉴">{nav.map((item) => <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>{item.label}</Link>)}<Link href="/my/questions">마이페이지</Link><Link href="/admin/users">관리자 데모</Link></nav>}
@@ -43,10 +42,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main id="main">{children}</main>
       <nav className="bottom-nav" aria-label="모바일 하단 메뉴">
         <Link className={pathname === "/" ? "active" : ""} href="/"><Home /><span>홈</span></Link>
-        <Link className={pathname.startsWith("/search") ? "active" : ""} href="/search"><Search /><span>검색</span></Link>
-        <Link className="bottom-ask" href="/ask"><Wrench /><span>질문</span></Link>
+        <Link className={pathname.startsWith("/search") || pathname.startsWith("/resolved") ? "active" : ""} href="/search"><Search /><span>전체글</span></Link>
+        <Link className="bottom-ask" href="/ask"><Wrench /><span>글쓰기</span></Link>
         <Link className={pathname.startsWith("/experts") ? "active" : ""} href="/experts"><Users /><span>전문가</span></Link>
-        <Link className={pathname.startsWith("/my") ? "active" : ""} href="/my/questions"><UserRound /><span>MY</span></Link>
+        <Link className={pathname.startsWith("/my") ? "active" : ""} href="/my/questions"><UserRound /><span>내 활동</span></Link>
       </nav>
       <footer className="site-footer">
         <div className="footer-inner">

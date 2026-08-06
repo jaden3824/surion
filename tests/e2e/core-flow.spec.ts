@@ -7,6 +7,20 @@ test.beforeEach(async ({ page }) => {
   await page.waitForLoadState("networkidle");
 });
 
+test("제품별 게시판을 선택하면 해당 글만 바로 볼 수 있다", async ({ page, isMobile }) => {
+  await expect(page.getByRole("heading", { name: "전체 수리 질문" })).toBeVisible();
+
+  if (isMobile) {
+    await page.getByLabel("게시판 선택").selectOption("cleaning");
+  } else {
+    await page.getByRole("button", { name: /청소가전/ }).click();
+  }
+
+  await expect(page.getByRole("heading", { name: "청소가전 게시판" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "충전독에 올리면 표시등이 꺼집니다" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "원래 없던 고주파 소리가 납니다" })).toHaveCount(0);
+});
+
 test("검색에서 실제 커뮤니티 글로 바로 이동할 수 있다", async ({ page }) => {
   const search = page.getByRole("textbox", { name: "고장 사례 검색" });
   await expect(async () => {
@@ -14,15 +28,15 @@ test("검색에서 실제 커뮤니티 글로 바로 이동할 수 있다", asyn
     await expect(search).toHaveValue("로보락 충전", { timeout: 1_000 });
   }).toPass({ timeout: 10_000 });
   await page.waitForTimeout(150);
-  await search.press("Enter");
+  await page.getByRole("button", { name: "검색", exact: true }).click();
 
   await expect(page).toHaveURL(/\/search\?q=/);
-  await expect(page.getByRole("heading", { name: "고장 사례를 찾아보세요" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "수리 질문 찾기" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "충전독에 올리면 표시등이 꺼집니다" })).toBeVisible();
 
   await page.getByRole("heading", { name: "충전독에 올리면 표시등이 꺼집니다" }).click();
   await expect(page).toHaveURL(/\/cases\/case-1/);
-  await expect(page.getByText("공개 대화", { exact: true })).toBeVisible();
+  await expect(page.getByText("공개 답변", { exact: true })).toBeVisible();
 });
 
 test("일반 사용자가 새 질문을 세 단계로 등록할 수 있다", async ({ page }) => {
@@ -45,11 +59,12 @@ test("일반 사용자가 새 질문을 세 단계로 등록할 수 있다", asy
   await expect(page.getByRole("heading", { name: "청소 중 본체가 반복해서 멈추고 다시 시작됩니다" })).toBeVisible();
 });
 
-test("사용자 경험과 전문가 답변이 같은 공개 대화에 쌓인다", async ({ page }) => {
+test("사용자 경험과 전문가 답변이 같은 공개 답변에 쌓인다", async ({ page }) => {
   await page.goto("/cases/case-1");
-  await page.getByLabel("보기 역할").selectOption("user");
+  await page.getByText("데모 역할 바꾸기", { exact: true }).click();
+  await page.getByLabel("현재 역할").selectOption("user");
   await page.getByRole("textbox").last().fill("저도 같은 모델에서 비슷한 증상이 있었고 충전 접점을 닦은 뒤 다시 정상 작동했습니다.");
-  await page.getByRole("button", { name: "의견 등록" }).click();
+  await page.getByRole("button", { name: "답변 등록" }).click();
 
   await expect(page.getByText("저도 같은 모델에서 비슷한 증상이 있었고 충전 접점을 닦은 뒤 다시 정상 작동했습니다.")).toBeVisible();
   await expect(page.getByText("일반 사용자").last()).toBeVisible();

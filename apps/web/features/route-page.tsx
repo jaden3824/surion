@@ -12,6 +12,7 @@ export function RoutePage({ path }: { path: string[] }) {
 
   if (route === "ask") return <AskPage />;
   if (route === "search") return <SearchPage />;
+  if (route === "resolved") return <SearchPage defaultStatus="RESOLVED" />;
   if (path[0] === "category" && path[1]) return <CategoryPage id={path[1]} />;
   if (path[0] === "models" && path[1]) return <ModelPage model={decodeURIComponent(path.slice(1).join("/"))} />;
   if (path[0] === "cases" && path[1]) return <CaseDetailPage id={path[1]} />;

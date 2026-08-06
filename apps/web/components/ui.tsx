@@ -1,11 +1,15 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import Link from "next/link";
-import { ChevronRight, MessageCircle, Bookmark, Eye, ThumbsUp } from "lucide-react";
+import { CheckCircle2, ChevronRight, CircleDashed } from "lucide-react";
 import type { CaseSummary } from "@surion/domain";
-import { statusLabel } from "@/lib/demo-data";
 
 export function StatusBadge({ status }: { status: CaseSummary["status"] }) {
-  return <span className={`status status-${status.toLowerCase()}`}>{statusLabel[status]}</span>;
+  return <ResolutionBadge status={status} />;
+}
+
+export function ResolutionBadge({ status }: { status: CaseSummary["status"] }) {
+  const resolved = status === "RESOLVED";
+  return <span className={`status resolution-status ${resolved ? "status-resolved" : "status-before"}`}>{resolved ? <CheckCircle2 aria-hidden="true" /> : <CircleDashed aria-hidden="true" />}{resolved ? "해결 완료" : "해결 전"}</span>;
 }
 
 export function RoleBadge({ children, tone = "user" }: { children: ReactNode; tone?: "user" | "expert" | "business" | "questioner" | "admin" }) {
@@ -26,20 +30,16 @@ export function CaseCard({ item, compact = false }: { item: CaseSummary; compact
     <article className={`case-card ${compact ? "case-card-compact" : ""}`}>
       <Link href={`/cases/${item.id}`} aria-label={`${item.title} 상세 보기`} className="case-card-link">
         <div className="case-card-top">
-          <span className="category-label">{item.category}</span>
-          <span className={`status ${item.status === "RESOLVED" ? "status-resolved" : "status-open"}`}>
-            {item.status === "RESOLVED" ? "해결 완료" : "해결 전"}
-          </span>
+          <div className="case-card-labels"><ResolutionBadge status={item.status} /><span className="category-label">{item.category}</span></div>
+          <span className="answer-summary"><strong>{item.comments}</strong>답변</span>
         </div>
         <h3>{item.title}</h3>
         {!compact && <p>{item.symptom}</p>}
-        <div className="model-line"><strong>{item.brand}</strong><span>{item.model}</span></div>
+        <div className="model-line"><span className="meta-key">제품</span><strong>{item.brand} {item.model}</strong></div>
         <div className="case-card-meta">
           <span>{item.author}</span><span>{item.createdAt}</span>
-          <span><Eye size={14} />{item.views.toLocaleString()}</span>
-          <span><MessageCircle size={14} />{item.comments}</span>
-          <span><Bookmark size={14} />{item.saves}</span>
-          <span><ThumbsUp size={14} />{item.helpful}</span>
+          <span>조회 {item.views.toLocaleString()}</span>
+          <span>같은 증상 {item.helpful}</span>
         </div>
       </Link>
     </article>

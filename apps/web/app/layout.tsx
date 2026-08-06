@@ -7,7 +7,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: `${brand.serviceName} · ${brand.serviceDescription}`, template: `%s | ${brand.serviceName}` },
   description: brand.slogan,
-  icons: { icon: brand.markPath, apple: brand.markPath },
+  icons: {
+    icon: [{ url: "/brand/surion-favicon.png?v=2", type: "image/png", sizes: "64x64" }],
+    shortcut: "/brand/surion-favicon.png?v=2",
+    apple: [{ url: "/brand/surion-apple-touch-icon.png?v=2", type: "image/png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = { themeColor: brand.primaryColor, width: "device-width", initialScale: 1 };

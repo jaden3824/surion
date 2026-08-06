@@ -13,11 +13,12 @@ export function AskPage() {
   const router = useRouter();
   const params = useSearchParams();
   const { addCase } = useDemoStore();
+  const initialCategory = categories.find((item) => item.id === params.get("category"))?.name ?? "";
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
-    category: "", brand: "", model: params.get("model") ?? "", title: "", symptom: "", symptomType: "", usagePeriod: "", occurredAt: "", attempts: "", additionalInfo: "", modelIdentificationStatus: "confirmed" as ModelIdentificationStatus,
+    category: initialCategory, brand: "", model: params.get("model") ?? "", title: "", symptom: "", symptomType: "", usagePeriod: "", occurredAt: "", attempts: "", additionalInfo: "", modelIdentificationStatus: "confirmed" as ModelIdentificationStatus,
   });
   const [files, setFiles] = useState<string[]>([]);
 

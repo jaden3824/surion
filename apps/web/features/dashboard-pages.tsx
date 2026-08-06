@@ -15,7 +15,7 @@ type DashboardGroup = "my" | "expert" | "admin";
 
 const navGroups = {
   my: [
-    ["/my/questions", "내 질문", FileQuestion], ["/my/activity", "댓글과 활동", Activity], ["/saved", "저장한 글", Bookmark], ["/notifications", "알림 센터", Bell], ["/repair-requests", "수리 요청", Wrench], ["/settings/profile", "프로필 설정", Settings],
+    ["/my/questions", "내 질문", FileQuestion], ["/my/activity", "답변과 활동", Activity], ["/saved", "저장한 글", Bookmark], ["/notifications", "알림 센터", Bell], ["/repair-requests", "수리 요청", Wrench], ["/settings/profile", "프로필 설정", Settings],
   ],
   expert: [
     ["/expert", "전문가 홈", LayoutDashboard], ["/expert/feed", "맞춤 질문 피드", Gauge], ["/expert/answers", "답변 중인 질문", MessageCircle], ["/expert/settings", "관심 분야·알림", BellRing], ["/expert/repair-requests", "수리 요청 관리", Inbox], ["/expert/profile", "전문가 프로필 편집", Store],
@@ -27,9 +27,9 @@ const navGroups = {
 
 const dashboardTitles: Record<string, [string, string]> = {
   "my/questions": ["내 질문", "내가 등록한 질문의 답변과 진행 상태를 확인하세요."],
-  "my/activity": ["댓글과 활동", "참여한 공개 대화와 도움 반응을 모아보세요."],
+  "my/activity": ["답변과 활동", "참여한 공개 답변과 도움 반응을 모아보세요."],
   saved: ["저장한 글", "나중에 다시 볼 고장 사례입니다."],
-  notifications: ["알림 센터", "질문 매칭, 댓글, 수리 요청 소식을 확인하세요."],
+  notifications: ["알림 센터", "질문 매칭, 답변, 수리 요청 소식을 확인하세요."],
   "repair-requests": ["보낸 수리 요청", "요청 상태와 비공개 대화를 확인하세요."],
   "settings/profile": ["프로필 설정", "공개 프로필과 계정 정보를 관리하세요."],
   expert: ["전문가 홈", "공개 답변 활동과 새 매칭을 한눈에 확인하세요."],
@@ -40,7 +40,7 @@ const dashboardTitles: Record<string, [string, string]> = {
   "expert/profile": ["전문가 프로필 편집", "답변 포트폴리오에 표시할 정보를 관리하세요."],
   "admin/users": ["사용자 관리", "계정 상태와 역할을 조회합니다."],
   "admin/experts": ["전문가 인증 상태 관리", "심사 상태는 관리자만 변경할 수 있습니다."],
-  "admin/reports": ["게시글과 댓글 신고 관리", "신고 사유와 콘텐츠를 함께 검토하세요."],
+  "admin/reports": ["게시글과 답변 신고 관리", "신고 사유와 콘텐츠를 함께 검토하세요."],
   "admin/catalog": ["카테고리·브랜드·모델 관리", "게시글에서 축적되는 제품 정보를 정리합니다."],
   "admin/models/review": ["임시 모델 검토", "사용자가 직접 입력한 모델을 검토합니다."],
   "admin/models/merge": ["중복 모델 통합", "별칭은 유지하고 중복 항목을 대표 모델로 합칩니다."],
@@ -63,11 +63,11 @@ function DashboardContent({ route, group }: { route: string; group: DashboardGro
     ["n1", "reply", "김수리 전문가가 답변을 남겼어요", "충전독 접점 높이와 전원 상태를 확인해 보세요.", "방금", "/cases/case-1"],
     ["n2", "match", "새 질문 4건이 관심 분야와 일치해요", "청소가전 · 로보락 · 충전 증상", "18분 전", "/expert/feed"],
     ["n3", "request", "새 수리 요청이 도착했어요", "맑은방님이 택배 수리를 요청했습니다.", "1시간 전", "/expert/repair-requests"],
-    ["n4", "reply", "내 댓글에 답글이 달렸어요", "추가 사진을 올렸습니다. 확인 부탁드려요.", "어제", "/cases/case-1"],
+    ["n4", "reply", "내 답변에 답글이 달렸어요", "추가 사진을 올렸습니다. 확인 부탁드려요.", "어제", "/cases/case-1"],
   ];
 
   if (route === "my/questions") return <div className="dashboard-card-list">{myCases.map((item) => <CaseCard key={item.id} item={item} />)}<Link className="button button-primary inline-action" href="/ask"><PenLine />새 질문 작성하기</Link></div>;
-  if (route === "my/activity") return <div className="activity-feed">{store.comments.slice(0, 6).map((comment) => <Link href={`/cases/${comment.caseId}`} key={comment.id}><span className="activity-icon"><MessageCircle /></span><div><strong>{comment.author === "민준아빠" ? "내가 의견을 남겼어요" : `${comment.author}님의 공개 의견`}</strong><p>{comment.body}</p><small>{comment.createdAt} · 도움돼요 {comment.helpfulCount}</small></div><ChevronRight /></Link>)}</div>;
+  if (route === "my/activity") return <div className="activity-feed">{store.comments.slice(0, 6).map((comment) => <Link href={`/cases/${comment.caseId}`} key={comment.id}><span className="activity-icon"><MessageCircle /></span><div><strong>{comment.author === "민준아빠" ? "내가 답변을 남겼어요" : `${comment.author}님의 공개 답변`}</strong><p>{comment.body}</p><small>{comment.createdAt} · 도움돼요 {comment.helpfulCount}</small></div><ChevronRight /></Link>)}</div>;
   if (route === "saved") { const saved = store.cases.filter((item) => store.savedCaseIds.includes(item.id)); return saved.length ? <div className="search-list">{saved.map((item) => <CaseCard key={item.id} item={item} />)}</div> : <EmptyState icon={<Bookmark />} title="저장한 글이 없어요" description="사례의 저장 버튼을 누르면 여기에서 다시 볼 수 있어요." />; }
   if (route === "notifications") return <div className="notifications-list"><div className="notification-toolbar"><span>읽지 않은 알림 {notifications.filter(([id]) => !store.notificationsRead.includes(id)).length}개</span><button onClick={() => notifications.forEach(([id]) => store.markNotificationRead(id))}><Check />모두 읽음</button></div>{notifications.map(([id, type, title, copy, time, href]) => <Link href={href} key={id} className={store.notificationsRead.includes(id) ? "read" : ""} onClick={() => store.markNotificationRead(id)}><span className={`notification-icon notification-${type}`}>{type === "request" ? <Wrench /> : type === "match" ? <Search /> : <MessageCircle />}</span><div><strong>{title}</strong><p>{copy}</p><small>{time}</small></div>{!store.notificationsRead.includes(id) && <i />}</Link>)}</div>;
   if (route === "repair-requests") return <RepairRequestDashboard expertMode={false} />;
@@ -116,7 +116,7 @@ function ExpertSettings({ onSaved, savedNotice }: { onSaved: () => void; savedNo
 
 function AdminUsers() {
   const users = ["민준아빠", "보름달", "재택근무중", "라떼좋아", "하늘소금", "수리온 운영자"];
-  return <div className="admin-table-wrap"><div className="admin-toolbar"><label><Search /><input placeholder="닉네임 또는 이메일 검색" /></label><select><option>전체 상태</option><option>활동 중</option><option>정지</option></select></div><table className="admin-table"><thead><tr><th>사용자</th><th>역할</th><th>질문</th><th>댓글</th><th>가입일</th><th>상태</th></tr></thead><tbody>{users.map((name, index) => <tr key={name}><td><strong>{name}</strong><small>user{index + 1}@example.com</small></td><td><RoleBadge tone={index === 5 ? "admin" : "user"}>{index === 5 ? "관리자" : "일반 사용자"}</RoleBadge></td><td>{index * 3 + 1}</td><td>{index * 7 + 2}</td><td>2026.0{(index % 7) + 1}.12</td><td><span className="active-account">활동 중</span></td></tr>)}</tbody></table></div>;
+  return <div className="admin-table-wrap"><div className="admin-toolbar"><label><Search /><input placeholder="닉네임 또는 이메일 검색" /></label><select><option>전체 상태</option><option>활동 중</option><option>정지</option></select></div><table className="admin-table"><thead><tr><th>사용자</th><th>역할</th><th>질문</th><th>답변</th><th>가입일</th><th>상태</th></tr></thead><tbody>{users.map((name, index) => <tr key={name}><td><strong>{name}</strong><small>user{index + 1}@example.com</small></td><td><RoleBadge tone={index === 5 ? "admin" : "user"}>{index === 5 ? "관리자" : "일반 사용자"}</RoleBadge></td><td>{index * 3 + 1}</td><td>{index * 7 + 2}</td><td>2026.0{(index % 7) + 1}.12</td><td><span className="active-account">활동 중</span></td></tr>)}</tbody></table></div>;
 }
 
 function AdminExperts({ statuses, setStatuses }: { statuses: Record<string, ExpertStatus>; setStatuses: React.Dispatch<React.SetStateAction<Record<string, ExpertStatus>>> }) {
@@ -125,7 +125,7 @@ function AdminExperts({ statuses, setStatuses }: { statuses: Record<string, Expe
 
 function AdminReports() {
   const [resolved, setResolved] = useState<string[]>([]);
-  const reports = [["report-1", "광고성 댓글", "연락 주세요. 당일 수리 가능합니다.", "댓글 · case-5"], ["report-2", "위험한 수리 안내", "전원을 연결한 상태에서 단자를 확인하세요.", "댓글 · case-12"], ["report-3", "개인정보 노출", "본문 사진에 택배 송장이 포함됨", "게시글 · case-17"]];
+  const reports = [["report-1", "광고성 답변", "연락 주세요. 당일 수리 가능합니다.", "답변 · case-5"], ["report-2", "위험한 수리 안내", "전원을 연결한 상태에서 단자를 확인하세요.", "답변 · case-12"], ["report-3", "개인정보 노출", "본문 사진에 택배 송장이 포함됨", "게시글 · case-17"]];
   return <div className="report-list">{reports.map(([id, reason, body, target]) => <article className={resolved.includes(id) ? "resolved" : ""} key={id}><span className="report-icon"><Flag /></span><div><span className="eyebrow">{reason}</span><h3>{body}</h3><p>{target} · 신고 2건 · 오늘 11:20</p></div><div><Button variant="secondary">원문 보기</Button><Button onClick={() => setResolved((current) => [...current, id])}>{resolved.includes(id) ? <><Check />처리됨</> : "검토 완료"}</Button></div></article>)}</div>;
 }
 
@@ -153,10 +153,10 @@ export function LoginPage({ mode }: { mode: "login" | "signup" }) {
 
 export function StaticPage({ type }: { type: string }) {
   const data: Record<string, [string, string, string[]]> = {
-    about: ["수리온 소개", "고장 경험을 공개 지식으로 바꿉니다.", ["제품 모델을 지정해 구체적으로 질문합니다.", "전문가와 일반 사용자가 같은 공간에서 의견을 나눕니다.", "답변을 확인한 질문자만 해당 전문가에게 수리를 요청합니다.", "실제 원인과 해결 결과가 다음 사용자를 위한 사례로 남습니다."]],
+    about: ["수리온 소개", "고장 경험을 공개 지식으로 바꿉니다.", ["제품 모델을 지정해 구체적으로 질문합니다.", "전문가와 일반 사용자가 같은 공간에서 답변을 나눕니다.", "답변을 확인한 질문자만 해당 전문가에게 수리를 요청합니다.", "실제 원인과 해결 결과가 다음 사용자를 위한 사례로 남습니다."]],
     safety: ["안전 가이드", "직접 확인은 안전한 범위까지만 해주세요.", ["점검 전 제품 전원과 플러그를 분리하세요.", "배터리 팽창, 타는 냄새, 연기, 물기에는 즉시 사용을 중단하세요.", "고전압·가스·냉매·회전날·리튬 배터리는 전문가에게 맡기세요.", "공개 사진에 주소, 전화번호, 송장, 얼굴이 없는지 확인하세요."]],
     terms: ["이용약관", "수리온 MVP 이용 원칙", ["공개 답변은 참고 정보이며 안전을 보장하는 전문 진단을 대체하지 않습니다.", "연락처만 남기는 광고성 답변과 위험한 수리 안내는 제한됩니다.", "실제 결제와 정산은 현재 제공하지 않습니다."]],
-    privacy: ["개인정보처리방침", "공개 정보와 비공개 정보를 구분합니다.", ["질문과 댓글은 공개되며 검색 가능한 사례로 남습니다.", "주소, 전화번호, 요청 세부사항은 수리 요청 당사자만 볼 수 있습니다.", "공개 질문용 파일과 비공개 요청용 파일 저장소를 분리합니다."]],
+    privacy: ["개인정보처리방침", "공개 정보와 비공개 정보를 구분합니다.", ["질문과 답변은 공개되며 검색 가능한 사례로 남습니다.", "주소, 전화번호, 요청 세부사항은 수리 요청 당사자만 볼 수 있습니다.", "공개 질문용 파일과 비공개 요청용 파일 저장소를 분리합니다."]],
   };
   const [title, subtitle, items] = data[type] ?? data.about;
   return <div className="static-page page-wrap"><div className="container narrow-container"><span className="eyebrow">수리온 원칙</span><h1>{title}</h1><p className="static-lead">{subtitle}</p><div className="static-list">{items.map((item, index) => <div key={item}><span>{String(index + 1).padStart(2, "0")}</span><p>{item}</p></div>)}</div><Link className="button button-primary" href="/">홈으로 돌아가기</Link></div></div>;
