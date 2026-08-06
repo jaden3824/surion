@@ -27,7 +27,7 @@ export function CaseCard({ item, compact = false }: { item: CaseSummary; compact
       <Link href={`/cases/${item.id}`} aria-label={`${item.title} 상세 보기`} className="case-card-link">
         <div className="case-card-top">
           <span className="category-label">{item.category}</span>
-          <StatusBadge status={item.status} />
+          {item.status === "RESOLVED" && <StatusBadge status={item.status} />}
         </div>
         <h3>{item.title}</h3>
         {!compact && <p>{item.symptom}</p>}
