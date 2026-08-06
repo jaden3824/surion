@@ -1,0 +1,14 @@
+{
+  "name": "surion",
+  "private": true,
+  "packageManager": "pnpm@11.16.0",
+  "scripts": {
+    "dev": "pnpm --filter @surion/web dev",
+    "build": "pnpm --filter @surion/web build",
+    "typecheck": "pnpm --filter @surion/web typecheck",
+    "lint": "pnpm --filter @surion/web lint",
+    "test": "pnpm --filter @surion/web test",
+    "test:e2e": "pnpm --filter @surion/web test:e2e",
+    "check": "pnpm typecheck && pnpm lint && pnpm test"
+  }
+}
