@@ -23,22 +23,22 @@ export const models = [
 
 export const experts: Expert[] = [
   {
-    id: "expert-kim", name: "김수리", status: "BUSINESS_VERIFIED", intro: "로봇청소기와 무선청소기를 12년째 수리합니다. 원인을 먼저 설명하고 꼭 필요한 수리만 제안합니다.", categories: ["청소가전", "생활가전"], brands: ["로보락", "다이슨", "LG전자"], regions: ["서울", "경기"], methods: ["택배", "방문"], answers: 186, validAnswers: 174, helpfulAnswers: 142, confirmedSolutions: 67, repairRequests: 54, repairsCompleted: 49, responseTime: "평균 42분", repairEnabled: true, activeNow: true,
+    id: "expert-kim", name: "김수리", avatarUrl: "/avatars/expert-kim.png", status: "BUSINESS_VERIFIED", intro: "로봇청소기와 무선청소기를 12년째 수리합니다. 원인을 먼저 설명하고 꼭 필요한 수리만 제안합니다.", categories: ["청소가전", "생활가전"], brands: ["로보락", "다이슨", "LG전자"], regions: ["서울", "경기"], methods: ["택배", "방문"], answers: 186, validAnswers: 174, helpfulAnswers: 142, repairRequests: 54, repairsCompleted: 49, responseTime: "평균 42분", repairEnabled: true,
   },
   {
-    id: "expert-park", name: "박기사의 전자연구소", status: "BUSINESS_VERIFIED", intro: "노트북·모니터 전원 및 화면 고장을 보드 단위로 점검합니다.", categories: ["PC/주변기기", "영상/음향"], brands: ["삼성전자", "LG전자", "레노버", "ASUS"], regions: ["전국"], methods: ["택배", "방문"], answers: 241, validAnswers: 226, helpfulAnswers: 190, confirmedSolutions: 88, repairRequests: 76, repairsCompleted: 70, responseTime: "평균 1시간", repairEnabled: true, activeNow: true,
+    id: "expert-park", name: "박기사의 전자연구소", avatarUrl: "/avatars/expert-park.png", status: "BUSINESS_VERIFIED", intro: "노트북·모니터 전원 및 화면 고장을 보드 단위로 점검합니다.", categories: ["PC/주변기기", "영상/음향"], brands: ["삼성전자", "LG전자", "레노버", "ASUS"], regions: ["전국"], methods: ["택배", "방문"], answers: 241, validAnswers: 226, helpfulAnswers: 190, repairRequests: 76, repairsCompleted: 70, responseTime: "평균 1시간", repairEnabled: true,
   },
   {
-    id: "expert-choi", name: "최바리스타", status: "PERSONAL_VERIFIED", intro: "가정용 커피머신의 누수, 스팀, 추출 불량을 주로 다룹니다.", categories: ["주방가전"], brands: ["드롱기", "필립스"], regions: ["부산", "경남"], methods: ["택배"], answers: 98, validAnswers: 91, helpfulAnswers: 77, confirmedSolutions: 41, repairRequests: 19, repairsCompleted: 17, responseTime: "평균 2시간", repairEnabled: true, activeNow: false,
+    id: "expert-choi", name: "최바리스타", avatarUrl: "/avatars/expert-choi.png", status: "PERSONAL_VERIFIED", intro: "가정용 커피머신의 누수, 스팀, 추출 불량을 주로 다룹니다.", categories: ["주방가전"], brands: ["드롱기", "필립스"], regions: ["부산", "경남"], methods: ["택배"], answers: 98, validAnswers: 91, helpfulAnswers: 77, repairRequests: 19, repairsCompleted: 17, responseTime: "평균 2시간", repairEnabled: true,
   },
   {
-    id: "expert-lee", name: "이동형 엔지니어", status: "BUSINESS_VERIFIED", intro: "스마트폰과 태블릿의 충전·배터리·침수 증상을 안전하게 안내합니다.", categories: ["모바일/웨어러블"], brands: ["삼성전자", "애플", "샤오미"], regions: ["대전", "세종"], methods: ["방문", "출장"], answers: 132, validAnswers: 125, helpfulAnswers: 101, confirmedSolutions: 56, repairRequests: 44, repairsCompleted: 39, responseTime: "평균 55분", repairEnabled: true, activeNow: true,
+    id: "expert-lee", name: "이동형 엔지니어", status: "BUSINESS_VERIFIED", intro: "스마트폰과 태블릿의 충전·배터리·침수 증상을 안전하게 안내합니다.", categories: ["모바일/웨어러블"], brands: ["삼성전자", "애플", "샤오미"], regions: ["대전", "세종"], methods: ["방문", "출장"], answers: 132, validAnswers: 125, helpfulAnswers: 101, repairRequests: 44, repairsCompleted: 39, responseTime: "평균 55분", repairEnabled: true,
   },
   {
-    id: "expert-han", name: "한컷 카메라수리", status: "PERSONAL_VERIFIED", intro: "미러리스 카메라와 렌즈의 셔터·AF·마운트 문제를 진단합니다.", categories: ["카메라"], brands: ["소니", "캐논", "니콘"], regions: ["전국"], methods: ["택배"], answers: 74, validAnswers: 69, helpfulAnswers: 58, confirmedSolutions: 29, repairRequests: 11, repairsCompleted: 10, responseTime: "평균 3시간", repairEnabled: false, activeNow: false,
+    id: "expert-han", name: "한컷 카메라수리", status: "PERSONAL_VERIFIED", intro: "미러리스 카메라와 렌즈의 셔터·AF·마운트 문제를 진단합니다.", categories: ["카메라"], brands: ["소니", "캐논", "니콘"], regions: ["전국"], methods: ["택배"], answers: 74, validAnswers: 69, helpfulAnswers: 58, repairRequests: 11, repairsCompleted: 10, responseTime: "평균 3시간", repairEnabled: false,
   },
   {
-    id: "expert-jung", name: "정공구", status: "PERSONAL_VERIFIED", intro: "전동공구 배터리와 모터, 스위치 계통을 점검합니다.", categories: ["공구/전동장비", "게임기"], brands: ["보쉬", "마끼다", "닌텐도"], regions: ["인천", "경기"], methods: ["택배", "방문"], answers: 63, validAnswers: 59, helpfulAnswers: 47, confirmedSolutions: 21, repairRequests: 18, repairsCompleted: 15, responseTime: "평균 1시간 30분", repairEnabled: true, activeNow: true,
+    id: "expert-jung", name: "정공구", status: "PERSONAL_VERIFIED", intro: "전동공구 배터리와 모터, 스위치 계통을 점검합니다.", categories: ["공구/전동장비", "게임기"], brands: ["보쉬", "마끼다", "닌텐도"], regions: ["인천", "경기"], methods: ["택배", "방문"], answers: 63, validAnswers: 59, helpfulAnswers: 47, repairRequests: 18, repairsCompleted: 15, responseTime: "평균 1시간 30분", repairEnabled: true,
   },
 ];
 
@@ -65,19 +65,35 @@ const caseRows = [
   ["case-20", "공구/전동장비", "마끼다", "DDF484", "배터리가 충전기에서 빨강·초록으로 번갈아 깜빡여요", "사용 후 뜨거운 상태에서 꽂은 뒤부터 식혀도 같은 증상입니다.", "RESOLVED", "목공취미", 774, 6, 21, 29, "confirmed", "배터리,충전"],
 ] as const;
 
+const memberAvatars: Record<string, string> = {
+  "재택근무중": "/avatars/member-remote.png",
+  "라떼좋아": "/avatars/member-latte.png",
+  "하늘소금": "/avatars/member-haneul.png",
+};
+
 export const initialCases: CaseSummary[] = caseRows.map((row, index) => ({
-  id: row[0], category: row[1], brand: row[2], model: row[3], title: row[4], symptom: row[5], status: row[6], author: row[7], views: row[8], comments: row[9], saves: row[10], helpful: row[11], modelIdentificationStatus: row[12], tags: row[13].split(","), createdAt: `${index < 8 ? "오늘" : index < 14 ? "어제" : "3일 전"} ${String(9 + (index % 9)).padStart(2, "0")}:${index % 2 ? "40" : "15"}`, solvedBy: row[6] === "RESOLVED" ? experts[index % experts.length].name : undefined,
+  id: row[0], category: row[1], brand: row[2], model: row[3], title: row[4], symptom: row[5], status: row[6], author: row[7], authorAvatarUrl: memberAvatars[row[7]], views: row[8], comments: row[9], saves: row[10], helpful: row[11], modelIdentificationStatus: row[12], tags: row[13].split(","), createdAt: `${index < 8 ? "오늘" : index < 14 ? "어제" : "3일 전"} ${String(9 + (index % 9)).padStart(2, "0")}:${index % 2 ? "40" : "15"}`, solvedBy: row[6] === "RESOLVED" ? experts[index % experts.length].name : undefined,
 }));
 
+initialCases[2].resolution = {
+  method: "제조사 서비스센터",
+  cause: "디스플레이 케이블 접촉 불량",
+  summary: "서비스센터에서 디스플레이 케이블을 교체한 뒤 화면 깜빡임이 사라졌습니다.",
+  cost: 68000,
+  duration: "약 2시간",
+  working: true,
+  review: "교체 후 일주일 동안 같은 증상이 다시 나타나지 않았습니다.",
+};
+
 export const initialComments: CaseComment[] = [
-  { id: "c1", caseId: "case-1", authorId: "expert-user-kim", author: "김수리", role: "BUSINESS_EXPERT", expertId: "expert-kim", type: "EXPERT_OPINION", body: "표시등이 바로 꺼진다면 충전 접점 오염과 도크 어댑터 전압 저하를 먼저 나눠 봐야 합니다. 전원 플러그를 뽑은 뒤 본체와 도크의 금속 접점을 마른 천으로 닦고 다시 올려 보세요. 젖은 천이나 금속 도구는 사용하지 마세요.", createdAt: "오늘 10:02", validExpertAnswer: true, helpfulCount: 24 },
-  { id: "c2", caseId: "case-1", authorId: "user-demo", author: "민준아빠", role: "QUESTIONER", type: "GENERAL", body: "접점을 닦아도 같았습니다. 도크에서 본체를 살짝 들어 올리면 표시등이 다시 들어옵니다.", createdAt: "오늘 10:21", replyToCommentId: "c1", replyToLabel: "김수리 전문가의 의견", helpfulCount: 2 },
-  { id: "c3", caseId: "case-1", authorId: "expert-user-park", author: "박기사의 전자연구소", role: "BUSINESS_EXPERT", expertId: "expert-park", type: "EXPERT_OPINION", body: "들어 올릴 때 반응한다면 어댑터보다 도크의 스프링 접점 높이 차이 가능성이 더 커 보입니다. 좌우 접점이 같은 높이로 부드럽게 올라오는지 전원을 분리한 상태에서 눈으로만 확인해 주세요.", createdAt: "오늘 10:48", validExpertAnswer: true, helpfulCount: 19 },
-  { id: "c4", caseId: "case-1", authorId: "user-3", author: "로봇이좋아", role: "USER", type: "USER_EXPERIENCE", body: "같은 모델에서 도크 아래 전원 케이블이 끝까지 안 들어가 비슷한 증상이 있었습니다. 한 번 뺐다가 딸깍 들어가게 연결하고 해결됐어요.", createdAt: "오늘 11:04", helpfulCount: 8 },
-  { id: "c5", caseId: "case-1", authorId: "expert-user-kim", author: "김수리", role: "BUSINESS_EXPERT", expertId: "expert-kim", type: "REQUEST_INFORMATION", body: "추가로 본체 앱의 배터리 잔량이 오르는지, 도크 좌우 접점 높이가 다른지 사진을 부탁드립니다. 사진만으로 접점부 점검 필요 여부를 더 좁힐 수 있습니다.", createdAt: "오늘 11:18", replyToCommentId: "c2", replyToLabel: "질문자의 추가 정보", validExpertAnswer: true, helpfulCount: 11 },
-  { id: "c6", caseId: "case-1", authorId: "expert-user-jung", author: "정공구", role: "EXPERT", expertId: "expert-jung", type: "SAFETY_WARNING", body: "도크는 AC 전원을 사용하므로 분해하거나 접점에 드라이버를 대지 마세요. 외관 확인과 마른 천 청소까지만 권합니다.", createdAt: "오늘 11:33", validExpertAnswer: true, helpfulCount: 16 },
-  { id: "c7", caseId: "case-3", authorId: "expert-user-park", author: "박기사의 전자연구소", role: "BUSINESS_EXPERT", expertId: "expert-park", type: "EXPERT_OPINION", body: "외부 모니터가 정상이고 힌지 각도에 따라 바뀐다면 LCD 케이블 접촉 문제 가능성이 높습니다.", createdAt: "7월 28일", validExpertAnswer: true, helpfulCount: 38 },
-  { id: "c8", caseId: "case-3", authorId: "user-2", author: "재택근무중", role: "QUESTIONER", type: "RESOLUTION_UPDATE", body: "서비스센터에서 디스플레이 케이블을 교체했고 이후 일주일간 정상입니다.", createdAt: "8월 2일", helpfulCount: 21 },
+  { id: "c1", caseId: "case-1", authorId: "expert-user-kim", author: "김수리", avatarUrl: "/avatars/expert-kim.png", role: "BUSINESS_EXPERT", expertId: "expert-kim", type: "GENERAL", body: "표시등이 바로 꺼진다면 충전 접점 오염과 도크 어댑터 전압 저하를 먼저 나눠 봐야 합니다. 전원 플러그를 뽑은 뒤 본체와 도크의 금속 접점을 마른 천으로 닦고 다시 올려 보세요. 젖은 천이나 금속 도구는 사용하지 마세요.", createdAt: "오늘 10:02", validExpertAnswer: true, helpfulCount: 24 },
+  { id: "c2", caseId: "case-1", authorId: "user-demo", author: "민준아빠", role: "QUESTIONER", type: "GENERAL", body: "접점을 닦아도 같았습니다. 도크에서 본체를 살짝 들어 올리면 표시등이 다시 들어옵니다.", createdAt: "오늘 10:21", replyToCommentId: "c1", replyToLabel: "김수리님의 댓글", helpfulCount: 2 },
+  { id: "c3", caseId: "case-1", authorId: "expert-user-park", author: "박기사의 전자연구소", avatarUrl: "/avatars/expert-park.png", role: "BUSINESS_EXPERT", expertId: "expert-park", type: "GENERAL", body: "들어 올릴 때 반응한다면 어댑터보다 도크의 스프링 접점 높이 차이 가능성이 더 커 보입니다. 좌우 접점이 같은 높이로 부드럽게 올라오는지 전원을 분리한 상태에서 눈으로만 확인해 주세요.", createdAt: "오늘 10:48", validExpertAnswer: true, helpfulCount: 19 },
+  { id: "c4", caseId: "case-1", authorId: "user-3", author: "로봇이좋아", role: "USER", type: "GENERAL", body: "같은 모델에서 도크 아래 전원 케이블이 끝까지 안 들어가 비슷한 증상이 있었습니다. 한 번 뺐다가 딸깍 들어가게 연결하고 해결됐어요.", createdAt: "오늘 11:04", helpfulCount: 8 },
+  { id: "c5", caseId: "case-1", authorId: "expert-user-kim", author: "김수리", avatarUrl: "/avatars/expert-kim.png", role: "BUSINESS_EXPERT", expertId: "expert-kim", type: "GENERAL", body: "추가로 본체 앱의 배터리 잔량이 오르는지, 도크 좌우 접점 높이가 다른지 사진을 부탁드립니다. 사진만으로 접점부 점검 필요 여부를 더 좁힐 수 있습니다.", createdAt: "오늘 11:18", replyToCommentId: "c2", replyToLabel: "글쓴이의 추가 정보", validExpertAnswer: true, helpfulCount: 11 },
+  { id: "c6", caseId: "case-1", authorId: "expert-user-jung", author: "정공구", role: "EXPERT", expertId: "expert-jung", type: "GENERAL", body: "도크는 AC 전원을 사용하므로 분해하거나 접점에 드라이버를 대지 마세요. 외관 확인과 마른 천 청소까지만 권합니다.", createdAt: "오늘 11:33", validExpertAnswer: true, helpfulCount: 16 },
+  { id: "c7", caseId: "case-3", authorId: "expert-user-park", author: "박기사의 전자연구소", avatarUrl: "/avatars/expert-park.png", role: "BUSINESS_EXPERT", expertId: "expert-park", type: "GENERAL", body: "외부 모니터가 정상이고 힌지 각도에 따라 바뀐다면 LCD 케이블 접촉 문제 가능성이 높습니다.", createdAt: "7월 28일", validExpertAnswer: true, helpfulCount: 38 },
+  { id: "c8", caseId: "case-3", authorId: "user-2", author: "재택근무중", avatarUrl: "/avatars/member-remote.png", role: "QUESTIONER", type: "GENERAL", body: "서비스센터에서 디스플레이 케이블을 교체했고 이후 일주일간 정상입니다.", createdAt: "8월 2일", helpfulCount: 21 },
 ];
 
 export const initialRepairRequests: RepairRequest[] = [
@@ -87,28 +103,11 @@ export const initialRepairRequests: RepairRequest[] = [
 ];
 
 export const statusLabel: Record<CaseSummary["status"], string> = {
-  OPEN: "답변 대기",
-  NEEDS_INFORMATION: "추가 정보 필요",
-  DIAGNOSING: "원인 확인 중",
-  REPAIR_REQUESTED: "수리 요청됨",
-  IN_REPAIR: "수리 진행 중",
+  OPEN: "해결 전",
+  NEEDS_INFORMATION: "해결 전",
+  DIAGNOSING: "해결 전",
+  REPAIR_REQUESTED: "해결 전",
+  IN_REPAIR: "해결 전",
   RESOLVED: "해결 완료",
-  CLOSED_UNRESOLVED: "미해결 종료",
-};
-
-export const commentTypeLabel: Record<CaseComment["type"], string> = {
-  GENERAL: "일반 의견",
-  EXPERT_OPINION: "전문가 의견",
-  REQUEST_INFORMATION: "추가 확인 필요",
-  USER_EXPERIENCE: "경험 공유",
-  RESOLUTION_UPDATE: "해결 업데이트",
-  SAFETY_WARNING: "안전 주의",
-};
-
-export const roleLabel: Record<CaseComment["role"], string> = {
-  QUESTIONER: "질문자",
-  EXPERT: "개인 전문가",
-  BUSINESS_EXPERT: "사업자 인증 전문가",
-  USER: "일반 사용자",
-  ADMIN: "관리자",
+  CLOSED_UNRESOLVED: "해결 전",
 };

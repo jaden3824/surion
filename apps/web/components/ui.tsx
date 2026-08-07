@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2, ChevronRight, CircleDashed } from "lucide-react";
+import Image from "next/image";
+import { CheckCircle2, ChevronRight, CircleDashed, Eye, MessageCircle, UserRound } from "lucide-react";
 import type { CaseSummary } from "@surion/domain";
 
 export function StatusBadge({ status }: { status: CaseSummary["status"] }) {
@@ -16,6 +17,22 @@ export function RoleBadge({ children, tone = "user" }: { children: ReactNode; to
   return <span className={`role role-${tone}`}>{children}</span>;
 }
 
+export function Avatar({ name, src, size = "md", className = "" }: { name: string; src?: string; size?: "xs" | "sm" | "md" | "lg" | "xl"; className?: string }) {
+  return (
+    <span className={`user-avatar user-avatar-${size} ${className}`} role="img" aria-label={src ? `${name} 프로필 사진` : `${name} 기본 프로필 이미지`}>
+      {src ? (
+        <Image src={src} alt="" width={160} height={160} unoptimized={src.startsWith("data:")} />
+      ) : (
+        <svg viewBox="0 0 64 64" focusable="false" aria-hidden="true">
+          <circle cx="32" cy="32" r="32" fill="#e2e6eb" />
+          <circle cx="32" cy="24" r="11" fill="#9aa2ad" />
+          <path d="M10 61c1.8-14.4 10.5-23 22-23s20.2 8.6 22 23" fill="#9aa2ad" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
 export function SectionHeading({ eyebrow, title, description, href, linkLabel = "전체 보기" }: { eyebrow?: string; title: string; description?: string; href?: string; linkLabel?: string }) {
   return (
     <div className="section-heading">
@@ -28,20 +45,20 @@ export function SectionHeading({ eyebrow, title, description, href, linkLabel = 
 export function CaseCard({ item, compact = false }: { item: CaseSummary; compact?: boolean }) {
   return (
     <article className={`case-card ${compact ? "case-card-compact" : ""}`}>
-      <Link href={`/cases/${item.id}`} aria-label={`${item.title} 상세 보기`} className="case-card-link">
-        <div className="case-card-top">
-          <div className="case-card-labels"><ResolutionBadge status={item.status} /><span className="category-label">{item.category}</span></div>
-          <span className="answer-summary"><strong>{item.comments}</strong>답변</span>
-        </div>
-        <h3>{item.title}</h3>
-        {!compact && <p>{item.symptom}</p>}
-        <div className="model-line"><span className="meta-key">제품</span><strong>{item.brand} {item.model}</strong></div>
-        <div className="case-card-meta">
-          <span>{item.author}</span><span>{item.createdAt}</span>
-          <span>조회 {item.views.toLocaleString()}</span>
-          <span>같은 증상 {item.helpful}</span>
-        </div>
-      </Link>
+      <header className="case-card-author-row">
+        <Avatar name={item.author} src={item.authorAvatarUrl} size="sm" />
+        <div><strong>{item.author}</strong><span>{item.createdAt}</span></div>
+        <ResolutionBadge status={item.status} />
+      </header>
+      <div className="case-card-context"><span>{item.category}</span><strong>{item.brand} · {item.model}</strong></div>
+      <h3><Link href={`/cases/${item.id}`}>{item.title}</Link></h3>
+      <p>{item.symptom}</p>
+      <footer className="case-card-footer">
+        <span><MessageCircle aria-hidden="true" />댓글 {item.comments}</span>
+        <span><Eye aria-hidden="true" />조회 {item.views.toLocaleString()}</span>
+        <span><UserRound aria-hidden="true" />같은 증상 {item.helpful}</span>
+        <Link href={`/cases/${item.id}`} aria-label={`${item.title} 게시글 보기`}>게시글 보기<ChevronRight aria-hidden="true" /></Link>
+      </footer>
     </article>
   );
 }

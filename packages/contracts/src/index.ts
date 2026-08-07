@@ -16,7 +16,6 @@ export const createCaseSchema = z.object({
 
 export const createCommentSchema = z.object({
   caseId: z.string(),
-  type: z.enum(["GENERAL", "EXPERT_OPINION", "REQUEST_INFORMATION", "USER_EXPERIENCE", "RESOLUTION_UPDATE", "SAFETY_WARNING"]),
   body: z.string().min(2).max(3000),
   replyToCommentId: z.string().optional(),
 });

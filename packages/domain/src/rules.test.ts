@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canChangeExpertStatus, canPromoteTemporaryModel, canReadPrivateRequest, canRequestRepair, canResolveCase, canViewExpertFeed } from "./rules";
-import type { CaseComment, Expert, RepairRequest } from "./types";
+import type { CaseComment, Expert, RepairRequest, Resolution } from "./types";
 
 const expert: Expert = {
   id: "expert-1",
@@ -14,22 +14,20 @@ const expert: Expert = {
   answers: 1,
   validAnswers: 1,
   helpfulAnswers: 1,
-  confirmedSolutions: 1,
   repairRequests: 0,
   repairsCompleted: 0,
   responseTime: "1시간",
   repairEnabled: true,
-  activeNow: true,
 };
 
-const answer: CaseComment = {
+const expertComment: CaseComment = {
   id: "comment-1",
   caseId: "case-1",
   authorId: "expert-user-1",
   author: "김수리",
   role: "BUSINESS_EXPERT",
   expertId: expert.id,
-  type: "EXPERT_OPINION",
+  type: "GENERAL",
   body: "충전 접점의 오염이나 어댑터 전압 저하 가능성을 확인해 보세요.",
   createdAt: "2026-08-01",
   validExpertAnswer: true,
@@ -37,16 +35,16 @@ const answer: CaseComment = {
 };
 
 describe("수리 요청 업무 규칙", () => {
-  it("답변하지 않은 전문가는 수리 요청 대상이 아니다", () => {
+  it("댓글을 남기지 않은 전문가는 수리 요청 대상이 아니다", () => {
     expect(canRequestRepair({ currentUserId: "user-1", questionAuthorId: "user-1", expert, comments: [], caseId: "case-1", caseStatus: "OPEN", repairRequests: [] })).toBe(false);
   });
 
-  it("유효 답변을 남긴 수리 가능 전문가에게 요청할 수 있다", () => {
-    expect(canRequestRepair({ currentUserId: "user-1", questionAuthorId: "user-1", expert, comments: [answer], caseId: "case-1", caseStatus: "DIAGNOSING", repairRequests: [] })).toBe(true);
+  it("유효한 댓글을 남긴 수리 가능 전문가에게 요청할 수 있다", () => {
+    expect(canRequestRepair({ currentUserId: "user-1", questionAuthorId: "user-1", expert, comments: [expertComment], caseId: "case-1", caseStatus: "DIAGNOSING", repairRequests: [] })).toBe(true);
   });
 
   it("동시에 두 개의 활성 요청을 만들 수 없다", () => {
-    expect(canRequestRepair({ currentUserId: "user-1", questionAuthorId: "user-1", expert, comments: [answer], caseId: "case-1", caseStatus: "OPEN", repairRequests: [{ id: "r1", caseId: "case-1", expertId: "expert-2", requesterId: "user-1", method: "택배", preferredDate: "", note: "", status: "PENDING", createdAt: "" }] })).toBe(false);
+    expect(canRequestRepair({ currentUserId: "user-1", questionAuthorId: "user-1", expert, comments: [expertComment], caseId: "case-1", caseStatus: "OPEN", repairRequests: [{ id: "r1", caseId: "case-1", expertId: "expert-2", requesterId: "user-1", method: "택배", preferredDate: "", note: "", status: "PENDING", createdAt: "" }] })).toBe(false);
   });
 });
 
@@ -62,6 +60,19 @@ describe("권한 규칙", () => {
   it("해결 결과는 질문자만 등록할 수 있다", () => {
     expect(canResolveCase("user-1", "user-1")).toBe(true);
     expect(canResolveCase("expert-user-1", "user-1")).toBe(false);
+  });
+
+  it("해결 기록은 특정 댓글을 선택하지 않고 만들 수 있다", () => {
+    const resolution: Resolution = {
+      method: "직접 해결",
+      cause: "접점 오염",
+      summary: "전원을 분리하고 접점을 닦아 해결했습니다.",
+      duration: "하루 이내",
+      working: true,
+    };
+
+    expect(resolution).not.toHaveProperty("helperCommentId");
+    expect(resolution.summary).toContain("해결");
   });
 
   it("비공개 수리 요청은 요청자와 대상 전문가만 읽을 수 있다", () => {

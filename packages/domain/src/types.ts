@@ -30,13 +30,16 @@ export interface CaseSummary {
   title: string;
   symptom: string;
   status: CaseStatus;
+  authorId?: string;
   author: string;
+  authorAvatarUrl?: string;
   createdAt: string;
   views: number;
   comments: number;
   saves: number;
   helpful: number;
   solvedBy?: string;
+  resolution?: Resolution;
   modelIdentificationStatus: ModelIdentificationStatus;
   tags: string[];
 }
@@ -46,6 +49,7 @@ export interface CaseComment {
   caseId: string;
   authorId: string;
   author: string;
+  avatarUrl?: string;
   role: RoleSnapshot;
   expertId?: string;
   type: CommentType;
@@ -62,6 +66,7 @@ export interface CaseComment {
 export interface Expert {
   id: string;
   name: string;
+  avatarUrl?: string;
   status: ExpertStatus;
   intro: string;
   categories: string[];
@@ -71,12 +76,10 @@ export interface Expert {
   answers: number;
   validAnswers: number;
   helpfulAnswers: number;
-  confirmedSolutions: number;
   repairRequests: number;
   repairsCompleted: number;
   responseTime: string;
   repairEnabled: boolean;
-  activeNow: boolean;
 }
 
 export interface RepairRequest {
@@ -97,7 +100,6 @@ export interface Resolution {
   summary: string;
   cost?: number;
   duration: string;
-  helperCommentId?: string;
   working: boolean;
   review?: string;
 }

@@ -9,6 +9,12 @@
     "lint": "pnpm --filter @surion/web lint",
     "test": "pnpm --filter @surion/web test",
     "test:e2e": "pnpm --filter @surion/web test:e2e",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
+  },
+  "devDependencies": {
+    "supabase": "^2.111.0"
   }
 }

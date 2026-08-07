@@ -4,21 +4,25 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, ArrowLeft, ArrowRight, Camera, Check, FileVideo, Info, Search, Upload } from "lucide-react";
 import type { CaseSummary, ModelIdentificationStatus } from "@surion/domain";
-import { brands, categories, models } from "@/lib/demo-data";
+import { BoardSelector } from "@/components/board-selector";
+import { getBoardById, normalizeBoardId } from "@/lib/boards";
+import { brands, models } from "@/lib/demo-data";
+import type { AuthViewer } from "@/lib/auth/types";
 import { useDemoStore } from "./demo-store";
 
 const symptomTypes = ["전원이 안 켜져요", "작동 중 멈춰요", "소음·진동이 있어요", "화면·표시 이상", "충전·배터리 문제", "누수·냄새·연기", "기타"];
 
-export function AskPage() {
+export function AskPage({ viewer }: { viewer: AuthViewer | null }) {
   const router = useRouter();
   const params = useSearchParams();
-  const { addCase } = useDemoStore();
-  const initialCategory = categories.find((item) => item.id === params.get("category"))?.name ?? "";
+  const { addCase, profileAvatar, favoriteBoardIds, toggleFavoriteBoard } = useDemoStore();
+  const initialBoard = normalizeBoardId(params.get("board") ?? params.get("category"), false);
+  const [postKind, setPostKind] = useState<"question" | "experience">("question");
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
-    category: initialCategory, brand: "", model: params.get("model") ?? "", title: "", symptom: "", symptomType: "", usagePeriod: "", occurredAt: "", attempts: "", additionalInfo: "", modelIdentificationStatus: "confirmed" as ModelIdentificationStatus,
+    category: initialBoard, brand: "", model: params.get("model") ?? "", title: "", symptom: "", symptomType: "", usagePeriod: "", occurredAt: "", attempts: "", additionalInfo: "", modelIdentificationStatus: "confirmed" as ModelIdentificationStatus,
   });
   const [files, setFiles] = useState<string[]>([]);
 
@@ -35,6 +39,7 @@ export function AskPage() {
     if (step === 2) {
       if (form.title.trim().length < 8) nextErrors.push("제목을 8자 이상 입력해 주세요.");
       if (form.symptom.trim().length < 20) nextErrors.push("증상을 20자 이상 자세히 입력해 주세요.");
+      if (postKind === "experience" && form.attempts.trim().length < 10) nextErrors.push("실제로 해결한 방법을 10자 이상 적어 주세요.");
     }
     setErrors(nextErrors);
     if (!nextErrors.length) setStep((current) => Math.min(3, current + 1));
@@ -42,27 +47,29 @@ export function AskPage() {
 
   function submit() {
     const id = `case-${Date.now()}`;
+    const selectedBoard = getBoardById(form.category);
+    if (!selectedBoard) { setErrors(["게시판을 선택해 주세요."]); setStep(1); return; }
     const item: CaseSummary = {
-      id, category: form.category, brand: form.brand, model: form.model, title: form.title, symptom: form.symptom, status: "OPEN", author: "민준아빠", createdAt: "방금", views: 0, comments: 0, saves: 0, helpful: 0, modelIdentificationStatus: form.modelIdentificationStatus, tags: [form.symptomType || "증상 확인 중"],
+      id, category: selectedBoard.name, brand: form.brand, model: form.model, title: form.title, symptom: form.symptom, status: postKind === "experience" ? "RESOLVED" : "OPEN", authorId: viewer?.id, author: viewer?.nickname ?? "민준아빠", authorAvatarUrl: viewer?.avatarUrl || (!viewer && profileAvatar) || undefined, createdAt: "방금", views: 0, comments: 0, saves: 0, helpful: 0, modelIdentificationStatus: form.modelIdentificationStatus, tags: [form.symptomType || "증상 확인 중"], resolution: postKind === "experience" ? { method: "직접 해결", cause: "사용자 경험 기록", summary: form.attempts, duration: "하루 이내", working: true, review: form.additionalInfo || undefined } : undefined,
     };
     addCase(item);
     setSubmitted(true);
     window.setTimeout(() => router.push(`/cases/${id}`), 900);
   }
 
-  if (submitted) return <div className="success-page"><div className="success-mark"><Check /></div><h1>질문이 등록됐어요</h1><p>관심 분야가 맞는 전문가 피드에 질문이 노출됩니다.</p></div>;
+  if (submitted) return <div className="success-page"><div className="success-mark"><Check /></div><h1>게시글이 등록됐어요</h1><p>선택한 게시판에 글이 표시되고 누구나 댓글로 경험을 나눌 수 있어요.</p></div>;
 
   return (
     <div className="ask-page page-wrap">
       <div className="container narrow-container">
-        <div className="ask-header"><span className="eyebrow">새 질문</span><h1>어떤 문제가 생겼나요?</h1><p>아는 만큼만 적어도 괜찮아요. 제품과 증상을 구체적으로 알려주면 더 정확한 답을 받을 수 있어요.</p></div>
+        <div className="ask-header"><span className="eyebrow">새 글</span><h1>어떤 경험을 나누고 싶나요?</h1><p>문제가 생겨 도움을 구하거나, 이미 해결한 과정을 다른 사용자에게 공유할 수 있어요.</p><div className="post-kind-selector" role="group" aria-label="게시글 종류"><button type="button" className={postKind === "question" ? "active" : ""} onClick={() => setPostKind("question")} aria-pressed={postKind === "question"}><strong>도움이 필요해요</strong><span>증상을 올리고 댓글을 받아요</span></button><button type="button" className={postKind === "experience" ? "active" : ""} onClick={() => setPostKind("experience")} aria-pressed={postKind === "experience"}><strong>해결 경험을 나눠요</strong><span>내가 해결한 과정을 기록해요</span></button></div></div>
         <ol className="stepper"><li className={step >= 1 ? "active" : ""}><span>{step > 1 ? <Check /> : "1"}</span>제품 정보</li><li className={step >= 2 ? "active" : ""}><span>{step > 2 ? <Check /> : "2"}</span>증상 설명</li><li className={step >= 3 ? "active" : ""}><span>3</span>사진과 확인</li></ol>
 
         {errors.length > 0 && <div className="form-errors" role="alert"><AlertTriangle /> <div><strong>확인해 주세요</strong>{errors.map((error) => <p key={error}>{error}</p>)}</div></div>}
 
         <div className="form-panel">
-          {step === 1 && <section className="form-step"><div className="form-step-title"><span>1</span><div><h2>제품을 알려주세요</h2><p>게시글이 쌓이면서 모델별 해결 사례가 만들어집니다.</p></div></div>
-            <fieldset className="category-picker"><legend>카테고리 <em>필수</em></legend><div>{categories.map((item) => <label key={item.id} className={form.category === item.name ? "selected" : ""}><input type="radio" name="category" value={item.name} checked={form.category === item.name} onChange={() => update("category", item.name)} /><strong>{item.name}</strong><small>{item.description}</small></label>)}</div></fieldset>
+          {step === 1 && <section className="form-step"><div className="form-step-title"><span>1</span><div><h2>제품을 알려주세요</h2><p>전체글 화면과 같은 게시판 구조에서 하나를 선택합니다.</p></div></div>
+            <fieldset className="category-picker board-picker"><legend>게시판 <em>필수</em></legend><BoardSelector selectedId={form.category} includeAll={false} onChange={(boardId) => update("category", boardId)} label="글을 올릴 게시판" favoriteIds={favoriteBoardIds} onToggleFavorite={toggleFavoriteBoard} /></fieldset>
             <div className="field-grid"><label>브랜드 <em>필수</em><input list="brand-list" value={form.brand} onChange={(event) => update("brand", event.target.value)} placeholder="검색하거나 직접 입력" /><datalist id="brand-list">{brands.map((item) => <option key={item} value={item} />)}</datalist></label>
               <div className="model-field"><label>모델명 <em>필수</em><span className="input-with-icon"><Search /><input value={form.model} onChange={(event) => { update("model", event.target.value); update("modelIdentificationStatus", "user_entered"); }} placeholder="예: S8 MaxV Ultra" disabled={form.modelIdentificationStatus === "unknown"} /></span></label>{modelSuggestions.length > 0 && <div className="suggestion-list">{modelSuggestions.map((model) => <button key={model} onClick={() => { update("model", model); update("modelIdentificationStatus", "confirmed"); }}>{model}</button>)}</div>}<button className="model-help" onClick={() => { update("modelIdentificationStatus", "unknown"); update("model", "모델명 확인 중"); }}>모델명을 모르겠어요</button></div></div>
             {form.modelIdentificationStatus === "unknown" && <div className="info-callout"><Camera /><div><strong>제품 명판이나 라벨 사진을 준비해 주세요</strong><p>보통 제품 바닥, 뒷면, 배터리 안쪽에 모델명이 있어요. 관리자가 확인할 수 있도록 검토 상태로 저장됩니다.</p></div></div>}
@@ -74,19 +81,19 @@ export function AskPage() {
             <fieldset className="chip-picker"><legend>증상 유형 <span>선택</span></legend><div>{symptomTypes.map((type) => <label key={type} className={form.symptomType === type ? "selected" : ""}><input type="radio" name="symptom" checked={form.symptomType === type} onChange={() => update("symptomType", type)} />{type}</label>)}</div></fieldset>
             <label>증상 설명 <em>필수</em><textarea value={form.symptom} onChange={(event) => update("symptom", event.target.value)} placeholder="언제, 어떤 상황에서, 얼마나 자주 문제가 생기는지 적어주세요." rows={7} maxLength={4000} /><span className="char-count">{form.symptom.length}/4000</span></label>
             <div className="field-grid"><label>사용 기간 <span>선택</span><input value={form.usagePeriod} onChange={(event) => update("usagePeriod", event.target.value)} placeholder="예: 약 2년" /></label><label>언제부터 발생했나요? <span>선택</span><input value={form.occurredAt} onChange={(event) => update("occurredAt", event.target.value)} placeholder="예: 3일 전부터" /></label></div>
-            <label>이미 시도한 조치 <span>선택</span><textarea value={form.attempts} onChange={(event) => update("attempts", event.target.value)} placeholder="전원 재연결, 필터 청소 등 이미 해본 조치를 알려주세요." rows={4} /></label>
+            <label>{postKind === "experience" ? "실제로 해결한 방법" : "이미 시도한 조치"} {postKind === "experience" ? <em>필수</em> : <span>선택</span>}<textarea value={form.attempts} onChange={(event) => update("attempts", event.target.value)} placeholder={postKind === "experience" ? "어떤 순서로 확인하고 무엇을 수리·교체했는지 적어주세요." : "전원 재연결, 필터 청소 등 이미 해본 조치를 알려주세요."} rows={4} /></label>
           </section>}
 
           {step === 3 && <section className="form-step"><div className="form-step-title"><span>3</span><div><h2>사진이나 영상을 추가해 주세요</h2><p>문제가 잘 보이는 자료는 원인을 좁히는 데 큰 도움이 됩니다.</p></div></div>
             <label className="upload-zone"><Upload /><strong>사진·영상 파일을 여기에 놓거나 선택하세요</strong><span>사진 최대 10장, 영상 최대 2개 · 데모에서는 파일명만 저장됩니다.</span><input type="file" multiple accept="image/*,video/*" onChange={(event) => setFiles(Array.from(event.target.files ?? []).map((file) => file.name))} /></label>
             {files.length > 0 && <div className="file-list">{files.map((file) => <span key={file}>{/\.(mp4|mov|webm)$/i.test(file) ? <FileVideo /> : <Camera />}{file}<button onClick={() => setFiles((current) => current.filter((name) => name !== file))}>삭제</button></span>)}</div>}
             <div className="privacy-warning"><AlertTriangle /><div><strong>개인정보가 보이지 않는지 확인해 주세요</strong><p>주소, 전화번호, 택배 송장, 얼굴이 포함된 사진은 공개 게시글에 올리지 마세요.</p></div></div>
-            <label>추가 정보 <span>선택</span><textarea value={form.additionalInfo} onChange={(event) => update("additionalInfo", event.target.value)} placeholder="답변자가 알아야 할 다른 내용이 있다면 적어주세요." rows={4} /></label>
+            <label>추가 정보 <span>선택</span><textarea value={form.additionalInfo} onChange={(event) => update("additionalInfo", event.target.value)} placeholder="댓글을 남길 사람들이 알아야 할 다른 내용이 있다면 적어주세요." rows={4} /></label>
             <div className="question-preview"><span className="eyebrow">등록 전 확인</span><strong>{form.title}</strong><p>{form.brand} · {form.model} · {form.category}</p><span>{form.symptom}</span></div>
           </section>}
         </div>
 
-        <div className="form-actions">{step > 1 ? <button className="button button-secondary" onClick={() => setStep((current) => current - 1)}><ArrowLeft />이전</button> : <button className="button button-ghost" onClick={() => router.back()}><ArrowLeft />취소</button>} {step < 3 ? <button className="button button-primary" onClick={next}>다음<ArrowRight /></button> : <button className="button button-primary" onClick={submit}>질문 등록하기<Check /></button>}</div>
+        <div className="form-actions">{step > 1 ? <button className="button button-secondary" onClick={() => setStep((current) => current - 1)}><ArrowLeft />이전</button> : <button className="button button-ghost" onClick={() => router.back()}><ArrowLeft />취소</button>} {step < 3 ? <button className="button button-primary" onClick={next}>다음<ArrowRight /></button> : <button className="button button-primary" onClick={submit}>게시글 등록하기<Check /></button>}</div>
       </div>
     </div>
   );

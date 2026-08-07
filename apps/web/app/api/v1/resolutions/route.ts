@@ -9,7 +9,6 @@ const resolutionSchema = z.object({
   summary: z.string().min(5),
   cost: z.number().nonnegative().optional(),
   duration: z.string(),
-  helperCommentId: z.string().uuid().optional(),
   working: z.boolean(),
   review: z.string().optional(),
 });
