@@ -1,0 +1,185 @@
+.tabs {
+  margin: -4px 0 27px;
+  padding: 4px;
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #f1f4f8;
+}
+
+.tabs a {
+  min-height: 40px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: #6b778a;
+  font-size: 13px;
+  font-weight: 700;
+  transition: color .16s, background .16s, box-shadow .16s;
+}
+
+.tabs a[aria-current="page"] {
+  color: #17335e;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(23, 37, 61, .12);
+}
+
+.credentialForm {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.fieldGroup label {
+  display: block;
+}
+
+.fieldGroup input[aria-invalid="true"] {
+  border-color: #cf5260;
+}
+
+.fieldGroup input[aria-invalid="true"]:focus {
+  border-color: #bd3342;
+  box-shadow: 0 0 0 3px rgba(189, 51, 66, .1);
+}
+
+.passwordField {
+  position: relative;
+}
+
+.passwordField input {
+  padding-right: 46px !important;
+}
+
+.passwordField button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: #6d788a;
+  background: transparent;
+  cursor: pointer;
+}
+
+.passwordField button:hover {
+  color: #17335e;
+  background: #f1f4f8;
+}
+
+.passwordField button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.passwordField button:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.passwordField svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fieldHint,
+.fieldError {
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.45;
+}
+
+.fieldHint {
+  color: #707c8f !important;
+}
+
+.fieldError {
+  color: #b12d3b !important;
+}
+
+.submitButton {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.accountPrompt {
+  margin: 18px 0 0 !important;
+  color: #6a7689 !important;
+  font-size: 13px !important;
+  text-align: center;
+}
+
+.accountPrompt a {
+  margin-left: 7px;
+  color: #1d56b5;
+  font-weight: 750;
+}
+
+.accountPrompt a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.profilePhotoLater {
+  margin: -10px 0 20px !important;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #68758a !important;
+  background: #f7f9fc;
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+
+.consentAll {
+  border-bottom-color: #d9e0ea !important;
+}
+
+.consentAll label {
+  color: #263752 !important;
+  font-weight: 750 !important;
+}
+
+.consentError {
+  margin: -12px 0 16px;
+  color: #b12d3b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.consentFieldset {
+  min-width: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.consentFieldset legend {
+  margin-bottom: 9px;
+  color: #263752;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.consentFieldset .consentError {
+  margin: 10px 0 0;
+}
+
+@media (max-width: 640px) {
+  .tabs {
+    margin-top: 0;
+  }
+
+  .credentialForm {
+    gap: 17px;
+  }
+}

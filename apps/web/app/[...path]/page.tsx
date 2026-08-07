@@ -34,6 +34,7 @@ function buildReturnPath(path: string[], searchParams: Record<string, string | s
 export default async function CatchAllPage({ params, searchParams }: CatchAllPageProps) {
   const { path } = await params;
   const auth = await getAuthState();
+  const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
   if (path[0] === "login" || path[0] === "signup") {
     const query = await searchParams;
@@ -52,17 +53,23 @@ export default async function CatchAllPage({ params, searchParams }: CatchAllPag
 
   if (protectedSections.has(path[0])) {
     const query = await searchParams;
-    if (auth.configured) {
+    if (!demoMode) {
       const next = buildReturnPath(path, query);
+      if (!auth.configured) {
+        redirect(`/login?auth_error=not_configured&next=${encodeURIComponent(next)}`);
+      }
       if (!auth.viewer) redirect(`/login?next=${encodeURIComponent(next)}`);
       if (!auth.onboardingComplete) {
         redirect(`/signup?step=profile&next=${encodeURIComponent(next)}`);
       }
+      // The expert workspace remains a demo until verified-expert authority is
+      // persisted and enforced on the server.
+      if (path[0] === "expert") redirect("/experts");
     }
 
     if (
       path[0] === "admin"
-      && process.env.NEXT_PUBLIC_DEMO_MODE !== "true"
+      && !demoMode
       && (!auth.configured || auth.viewer?.isAdmin !== true)
     ) {
       redirect("/");

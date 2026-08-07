@@ -10,27 +10,27 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("인증 설정이 없으면 외부 요청을 성공으로 처리하지 않는다", async ({ request }, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop", "서버 인증 계약은 한 번만 확인합니다.");
+test("인증 저장소가 연결되지 않은 환경은 가입을 성공으로 처리하지 않는다", async ({ request }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "서버의 fail-closed 계약은 한 번만 확인합니다.");
 
-  const emailResponse = await request.post("/api/auth/email/start", {
-    data: { email: "signup-test@surion.invalid" },
+  const signup = await request.post("/api/auth/signup", {
+    data: {
+      email: "signup-test@surion.invalid",
+      password: "safe-password-123",
+      nickname: "가입검수",
+      isOver14: true,
+      termsAccepted: true,
+      privacyAccepted: true,
+      next: "/ask",
+    },
   });
-  expect(emailResponse.status()).toBe(503);
-  await expect(emailResponse.json()).resolves.toMatchObject({
+  expect(signup.status()).toBe(503);
+  await expect(signup.json()).resolves.toMatchObject({
     ok: false,
     code: "AUTH_NOT_CONFIGURED",
-    message: "현재 로그인 서비스를 사용할 수 없습니다.",
   });
 
-  const kakaoResponse = await request.get("/api/auth/kakao?next=%2Fask", { maxRedirects: 0 });
-  expect(kakaoResponse.status()).toBe(503);
-  await expect(kakaoResponse.json()).resolves.toMatchObject({
-    ok: false,
-    code: "AUTH_NOT_CONFIGURED",
-  });
-
-  const profileResponse = await request.post("/api/auth/profile", {
+  const profile = await request.post("/api/auth/profile", {
     data: {
       nickname: "가입검수",
       isOver14: true,
@@ -39,21 +39,21 @@ test("인증 설정이 없으면 외부 요청을 성공으로 처리하지 않�
       next: "/ask",
     },
   });
-  expect(profileResponse.status()).toBe(503);
-  await expect(profileResponse.json()).resolves.toMatchObject({
+  expect(profile.status()).toBe(503);
+  await expect(profile.json()).resolves.toMatchObject({
     ok: false,
     code: "AUTH_NOT_CONFIGURED",
   });
 });
 
-test("서버가 이메일 형식과 가입 필수 동의를 우회할 수 없게 막는다", async ({ request }, testInfo) => {
+test("서버도 이메일·비밀번호와 필수 동의를 우회할 수 없게 검증한다", async ({ request }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "서버 입력 계약은 한 번만 확인합니다.");
 
-  const invalidEmail = await request.post("/api/auth/email/start", {
-    data: { email: "not-an-email" },
+  const invalidSignup = await request.post("/api/auth/signup", {
+    data: { email: "not-an-email", password: "short", next: "/ask" },
   });
-  expect(invalidEmail.status()).toBe(400);
-  expect(await invalidEmail.json()).toMatchObject({ ok: false, code: "INVALID_REQUEST" });
+  expect(invalidSignup.status()).toBe(400);
+  await expect(invalidSignup.json()).resolves.toMatchObject({ ok: false, code: "INVALID_SIGNUP" });
 
   for (const omittedRequiredField of ["isOver14", "termsAccepted", "privacyAccepted"] as const) {
     const body: Record<string, string | boolean> = {
@@ -67,114 +67,101 @@ test("서버가 이메일 형식과 가입 필수 동의를 우회할 수 없게
 
     const response = await request.post("/api/auth/profile", { data: body });
     expect(response.status()).toBe(400);
-    expect(await response.json()).toMatchObject({ ok: false, code: "INVALID_REQUEST" });
+    await expect(response.json()).resolves.toMatchObject({ ok: false, code: "INVALID_REQUEST" });
   }
 });
 
-test("회원가입 화면이 설정 오류를 알리고 로그인된 것처럼 이동하지 않는다", async ({ page }) => {
-  await page.goto("/signup?next=%2Fask", { waitUntil: "domcontentloaded" });
+test("로그인은 익숙한 이메일·비밀번호 흐름과 일반화된 오류를 제공한다", async ({ page }) => {
+  let submittedLogin: Record<string, unknown> | undefined;
+  await page.route("**/api/auth/login", async (route) => {
+    submittedLogin = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: false, message: "존재하지 않는 계정입니다." }),
+    });
+  });
 
-  await expect(page.getByRole("heading", { name: "수리온 시작하기" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "카카오 로그인" })).toBeVisible();
-  const sendCode = page.getByRole("button", { name: "인증번호 받기" });
-  await expect(sendCode).toBeEnabled({ timeout: 15_000 });
-  await page.getByRole("textbox", { name: "이메일" }).fill("new-member@example.com");
-  await sendCode.click();
+  await page.goto("/login?next=%2Fask", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "다시 만나 반가워요" })).toBeVisible();
+  const authTabs = page.getByRole("navigation", { name: "로그인과 회원가입 선택" });
+  await expect(authTabs.getByRole("link", { name: "로그인" })).toHaveAttribute("aria-current", "page");
+  await expect(authTabs.getByRole("link", { name: "회원가입" })).toHaveAttribute("href", "/signup?next=%2Fask");
+  await expect(page.getByText("카카오 로그인", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "비회원 둘러보기" })).toHaveAttribute("href", "/community");
 
-  await expect(page.locator(".auth-message[role=alert]")).toHaveText("현재 로그인 서비스를 사용할 수 없습니다.", { timeout: 15_000 });
-  await expect(page).toHaveURL(/\/signup\?next=%2Fask$/);
-  await expect(page.getByRole("textbox", { name: "이메일 인증번호" })).toHaveCount(0);
+  await page.getByRole("button", { name: "로그인", exact: true }).click();
+  await expect(page.getByText("이메일을 입력해 주세요.", { exact: true })).toBeVisible();
+  await expect(page.getByText("비밀번호를 입력해 주세요.", { exact: true })).toBeVisible();
+
+  await page.getByRole("textbox", { name: "이메일" }).fill("member@example.com");
+  const password = page.getByLabel("비밀번호", { exact: true });
+  await password.fill("correct-password");
+  await page.getByRole("button", { name: "비밀번호 표시" }).click();
+  await expect(password).toHaveAttribute("type", "text");
+  await page.getByRole("button", { name: "비밀번호 숨기기" }).click();
+  await expect(password).toHaveAttribute("type", "password");
+
+  await password.press("Enter");
+  await expect(page.locator(".auth-message[role=alert]")).toHaveText("이메일 또는 비밀번호를 확인해 주세요.");
+  expect(submittedLogin).toEqual({ email: "member@example.com", password: "correct-password", next: "/ask" });
+  await expect(page).toHaveURL(/\/login\?next=%2Fask$/);
 });
 
-test("이메일 인증번호와 필수 동의를 거쳐 원래 화면으로 복귀한다", async ({ page }) => {
-  let profileRequests = 0;
-  let submittedProfile: Record<string, unknown> | undefined;
+test("회원가입은 비밀번호 확인을 즉시 검증하고 처리 중 중복 제출을 막는다", async ({ page }) => {
+  let submittedSignup: Record<string, unknown> | undefined;
+  let releaseResponse!: () => void;
+  let markRequestStarted!: () => void;
+  const responseGate = new Promise<void>((resolve) => { releaseResponse = resolve; });
+  const requestStarted = new Promise<void>((resolve) => { markRequestStarted = resolve; });
 
-  await page.route("**/api/auth/email/start", async (route) => {
+  await page.route("**/api/auth/signup", async (route) => {
+    submittedSignup = route.request().postDataJSON() as Record<string, unknown>;
+    markRequestStarted();
+    await responseGate;
     await route.fulfill({
-      status: 200,
+      status: 409,
       contentType: "application/json",
-      body: JSON.stringify({ ok: true, message: "이메일로 인증번호를 보냈습니다." }),
-    });
-  });
-  await page.route("**/api/auth/email/verify", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        ok: true,
-        isNewUser: true,
-        message: "프로필 설정을 완료해 주세요.",
-        redirectTo: "/signup?step=profile&next=%2Fask",
-      }),
-    });
-  });
-  await page.route("**/api/auth/profile", async (route) => {
-    profileRequests += 1;
-    submittedProfile = route.request().postDataJSON() as Record<string, unknown>;
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ ok: true, isNewUser: true, redirectTo: "/ask" }),
+      body: JSON.stringify({ ok: false, message: "이미 사용 중인 이메일입니다." }),
     });
   });
 
   await page.goto("/signup?next=%2Fask", { waitUntil: "domcontentloaded" });
-  const sendCode = page.getByRole("button", { name: "인증번호 받기" });
-  await expect(sendCode).toBeEnabled({ timeout: 15_000 });
-  await page.getByRole("textbox", { name: "이메일" }).fill("new-member@example.com");
-  await sendCode.click();
-
-  await expect(page.getByRole("heading", { name: "인증번호를 입력해 주세요" })).toBeVisible({ timeout: 15_000 });
-  const codeInput = page.getByRole("textbox", { name: "이메일 인증번호" });
-  await codeInput.fill("12ab34");
-  await expect(codeInput).toHaveValue("1234");
-  await expect(page.getByRole("button", { name: "인증하고 계속" })).toBeDisabled();
-  await codeInput.fill("123456");
-  await page.getByRole("button", { name: "인증하고 계속" }).click();
-
-  await expect(page.getByRole("heading", { name: "수리온 프로필 만들기" })).toBeVisible();
-  await expect(page).toHaveURL(/\/signup\?step=profile&next=%2Fask$/);
-  await page.getByRole("textbox", { name: "닉네임" }).fill("고치는마음");
-  const completeSignup = page.getByRole("button", { name: "가입 완료" });
-  await expect(completeSignup).toBeEnabled({ timeout: 15_000 });
-  await completeSignup.click();
-  expect(profileRequests).toBe(0);
-
+  await expect(page.getByRole("heading", { name: "수리온에 가입하기" })).toBeVisible();
+  const email = page.getByRole("textbox", { name: "이메일" });
+  const password = page.getByLabel("비밀번호", { exact: true });
+  const passwordConfirm = page.getByLabel("비밀번호 확인", { exact: true });
+  const nickname = page.getByRole("textbox", { name: "닉네임" });
+  await email.fill("new-member@example.com");
+  await password.fill("password-one");
+  await passwordConfirm.fill("password-two");
+  await nickname.fill("새수리회원");
   await page.getByRole("checkbox", { name: /만 14세 이상/ }).check();
   await page.getByRole("checkbox", { name: /이용약관에 동의/ }).check();
-  await completeSignup.click();
-  expect(profileRequests).toBe(0);
+  await page.getByRole("checkbox", { name: /개인정보 수집·이용에 동의/ }).check();
+  await passwordConfirm.press("Enter");
+  await expect(page.getByText("비밀번호가 서로 다릅니다.", { exact: true })).toBeVisible();
+  expect(submittedSignup).toBeUndefined();
 
-  await page.getByRole("checkbox", { name: /개인정보처리방침에 동의/ }).check();
-  await completeSignup.click();
-  await expect(page).toHaveURL(/\/ask$/);
-  expect(profileRequests).toBe(1);
-  expect(submittedProfile).toMatchObject({
-    nickname: "고치는마음",
+  await passwordConfirm.fill("password-one");
+  await page.getByRole("button", { name: "비밀번호 확인 표시" }).click();
+  await expect(passwordConfirm).toHaveAttribute("type", "text");
+  await passwordConfirm.press("Enter");
+  await requestStarted;
+  await expect(page.getByRole("button", { name: "가입 중" })).toBeDisabled();
+  expect(submittedSignup).toEqual({
+    email: "new-member@example.com",
+    password: "password-one",
+    nickname: "새수리회원",
     isOver14: true,
     termsAccepted: true,
     privacyAccepted: true,
     next: "/ask",
   });
-});
 
-test("OAuth 오류가 나도 외부 복귀 주소로 이동하지 않는다", async ({ request }, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop", "서버 콜백의 복귀 주소 계약은 한 번만 확인합니다.");
-
-  const response = await request.get("/auth/callback?code=invalid&next=https%3A%2F%2Fevil.example%2Fsteal", {
-    maxRedirects: 0,
-  });
-  expect(response.status()).toBeGreaterThanOrEqual(300);
-  expect(response.status()).toBeLessThan(400);
-
-  const location = response.headers().location;
-  expect(location).toBeTruthy();
-  const redirect = new URL(location!, "http://127.0.0.1:3000");
-  expect(["127.0.0.1", "localhost"]).toContain(redirect.hostname);
-  expect(redirect.port).toBe("3000");
-  expect(redirect.pathname).toBe("/login");
-  expect(["not_configured", "oauth"]).toContain(redirect.searchParams.get("auth_error"));
+  releaseResponse();
+  await expect(page.locator(".auth-message[role=alert]")).toHaveText("회원가입을 완료하지 못했어요. 입력 내용을 확인하거나 잠시 후 다시 시도해 주세요.");
+  await expect(page).toHaveURL(/\/signup\?next=%2Fask$/);
 });
 
 test("PC 게시판 즐겨찾기를 해제하고 다시 추가하면 새로고침 후에도 유지된다", async ({ page, isMobile }) => {

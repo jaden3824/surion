@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const auth = await getAuthState();
 
   return (
-    <html lang="ko">
+    <html lang="ko" data-scroll-behavior="smooth">
       <body>
         <DemoStoreProvider>
           <AppShell viewer={auth.viewer}>{children}</AppShell>

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Activity, AlertTriangle, ArrowLeft, ArrowRight, BadgeCheck, Bell, BellRing, Bookmark, Boxes, Check, CheckCircle2, ChevronRight, CircleUserRound, ClipboardCheck, Clock, FileQuestion, Flag, FolderCog, Gauge, HeartHandshake, ImagePlus, Inbox, LayoutDashboard, LoaderCircle, Lock, Mail, Merge, MessageCircle, PackageCheck, PenLine, Search, Settings, ShieldCheck, Store, Trash2, Users, Wrench,
+  Activity, AlertTriangle, ArrowRight, BadgeCheck, Bell, BellRing, Bookmark, Boxes, Check, CheckCircle2, ChevronRight, CircleUserRound, ClipboardCheck, Clock, Eye, EyeOff, FileQuestion, Flag, FolderCog, Gauge, HeartHandshake, ImagePlus, Inbox, LayoutDashboard, LoaderCircle, Lock, Merge, MessageCircle, PackageCheck, PenLine, Search, Settings, ShieldCheck, Store, Trash2, Users, Wrench,
 } from "lucide-react";
 import type { ExpertStatus } from "@surion/domain";
 import { Avatar, Button, CaseCard, EmptyState, RoleBadge, SectionHeading, StatusBadge } from "@/components/ui";
 import { BrandLogo } from "@/components/brand-logo";
 import type { AuthViewer } from "@/lib/auth/types";
 import { categories, experts } from "@/lib/demo-data";
+import authStyles from "./auth-page.module.css";
 import { useDemoStore } from "./demo-store";
 
 type DashboardGroup = "my" | "expert" | "admin";
@@ -137,6 +138,37 @@ function ProfilePhotoPicker({ name, value, initialSrc, onChange }: { name: strin
   return <div className="profile-photo-picker"><Avatar name={name} src={displayedPhoto} size="xl" /><div className="profile-photo-actions"><div><label className="button button-secondary"><ImagePlus />사진 선택<input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={choosePhoto} /></label>{displayedPhoto && <button type="button" className="button button-ghost" onClick={() => { onChange(""); setError(""); }}><Trash2 />사진 삭제</button>}</div><p className="profile-photo-help">사진은 선택 사항이에요. 올리지 않으면 누구에게나 같은 기본 이미지가 표시됩니다. JPG·PNG·WEBP, 최대 2MB.</p>{error && <p className="profile-photo-error" role="alert">{error}</p>}</div></div>;
 }
 
+function AccountDeletion() {
+  const router = useRouter();
+  const [expanded, setExpanded] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function deleteAccount(event: React.FormEvent) {
+    event.preventDefault();
+    if (!password || confirmation !== "탈퇴") return;
+    setDeleting(true);
+    setError("");
+    try {
+      await authRequest("/api/auth/account", { password }, "DELETE");
+      router.replace("/");
+      router.refresh();
+    } catch (requestError) {
+      if (requestError instanceof AuthRequestError && requestError.code === "INVALID_CURRENT_PASSWORD") {
+        setError("현재 비밀번호를 확인해 주세요.");
+      } else {
+        setError("계정을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      }
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return <section className="account-danger-zone" aria-labelledby="account-deletion-title"><div><h2 id="account-deletion-title">회원 탈퇴</h2><p>계정, 공개 프로필과 프로필 사진이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</p></div>{!expanded ? <Button type="button" variant="secondary" onClick={() => setExpanded(true)}>탈퇴 안내 확인</Button> : <form onSubmit={deleteAccount}><p>본인 확인을 위해 현재 비밀번호와 <strong>탈퇴</strong>를 입력해 주세요.</p><label htmlFor="delete-account-password">현재 비밀번호<input id="delete-account-password" type="password" value={password} onChange={(event) => { setPassword(event.target.value); setError(""); }} autoComplete="current-password" maxLength={128} required /></label><label htmlFor="delete-account-confirmation">확인 문구<input id="delete-account-confirmation" value={confirmation} onChange={(event) => { setConfirmation(event.target.value); setError(""); }} autoComplete="off" placeholder="탈퇴" required /></label>{error && <p className="account-danger-error" role="alert">{error}</p>}<div className="account-danger-actions"><Button type="button" variant="secondary" onClick={() => { setExpanded(false); setPassword(""); setConfirmation(""); setError(""); }} disabled={deleting}>취소</Button><button className="button button-danger" type="submit" disabled={deleting || !password || confirmation !== "탈퇴"}>{deleting ? <><LoaderCircle className="spin" />탈퇴 처리 중</> : <><Trash2 />계정 영구 삭제</>}</button></div></form>}</section>;
+}
+
 function ProfileForm({ expertMode, viewer, onSaved, savedNotice }: { expertMode: boolean; viewer: AuthViewer | null; onSaved: () => void; savedNotice: boolean }) {
   const router = useRouter();
   const { profileAvatar, setProfileAvatar } = useDemoStore();
@@ -174,7 +206,7 @@ function ProfileForm({ expertMode, viewer, onSaved, savedNotice }: { expertMode:
 
   const avatarValue = viewer && !expertMode ? realAvatar : profileAvatar;
   const changeAvatar = viewer && !expertMode ? setRealAvatar : setProfileAvatar;
-  return <form className="settings-form" onSubmit={saveProfile}><section><h2>{expertMode ? "전문가 기본 정보" : "공개 프로필"}</h2><ProfilePhotoPicker name={nickname} value={avatarValue} initialSrc={expertMode ? experts[0].avatarUrl : viewer?.avatarUrl ?? undefined} onChange={changeAvatar} /><label>{expertMode ? "닉네임 또는 업체명" : "닉네임"}<input value={nickname} onChange={(event) => setNickname(event.target.value)} minLength={2} maxLength={30} required /></label><label>소개<textarea rows={4} value={bio} onChange={(event) => setBio(event.target.value)} maxLength={500} placeholder="고장 경험이나 관심 제품을 간단히 소개해 주세요." /></label>{expertMode && <><div className="field-grid"><label>서비스 가능 지역<input defaultValue="서울, 경기" /></label><label>수리 방식<input defaultValue="택배, 방문" /></label></div><label>전문 브랜드<input defaultValue="로보락, 다이슨, LG전자" /></label></>}</section><section><h2>계정 정보</h2><label>이메일<input type="email" defaultValue={viewer?.email ?? "demo@surion.kr"} readOnly={Boolean(viewer)} /></label><label>알림 수신<select defaultValue="web"><option value="web">웹 알림</option><option value="email">이메일 + 웹 알림</option><option value="none">받지 않음</option></select></label></section><div className="settings-actions"><Button type="submit" disabled={saving}>{saving ? <><LoaderCircle className="spin" />저장 중</> : <><Check />변경사항 저장</>}</Button>{savedNotice && <span><CheckCircle2 />저장됐어요.</span>}{saveError && <span role="alert">{saveError}</span>}</div></form>;
+  return <><form className="settings-form" onSubmit={saveProfile}><section><h2>{expertMode ? "전문가 기본 정보" : "공개 프로필"}</h2><ProfilePhotoPicker name={nickname} value={avatarValue} initialSrc={expertMode ? experts[0].avatarUrl : viewer?.avatarUrl ?? undefined} onChange={changeAvatar} /><label>{expertMode ? "닉네임 또는 업체명" : "닉네임"}<input value={nickname} onChange={(event) => setNickname(event.target.value)} minLength={2} maxLength={20} required /></label><label>소개<textarea rows={4} value={bio} onChange={(event) => setBio(event.target.value)} maxLength={500} placeholder="고장 경험이나 관심 제품을 간단히 소개해 주세요." /></label>{expertMode && <><div className="field-grid"><label>서비스 가능 지역<input defaultValue="서울, 경기" /></label><label>수리 방식<input defaultValue="택배, 방문" /></label></div><label>전문 브랜드<input defaultValue="로보락, 다이슨, LG전자" /></label></>}</section><section><h2>계정 정보</h2><label>이메일<input type="email" defaultValue={viewer?.email ?? "demo@surion.kr"} readOnly={Boolean(viewer)} /></label><label>알림 수신<select defaultValue="web"><option value="web">웹 알림</option><option value="email">이메일 + 웹 알림</option><option value="none">받지 않음</option></select></label></section><div className="settings-actions"><Button type="submit" disabled={saving}>{saving ? <><LoaderCircle className="spin" />저장 중</> : <><Check />변경사항 저장</>}</Button>{savedNotice && <span><CheckCircle2 />저장됐어요.</span>}{saveError && <span role="alert">{saveError}</span>}</div></form>{viewer && !expertMode && <AccountDeletion />}</>;
 }
 
 function ExpertSettings({ onSaved, savedNotice }: { onSaved: () => void; savedNotice: boolean }) {
@@ -212,19 +244,37 @@ function AdminModelMerge() {
   return <div className="merge-panel"><div className="merge-visual"><div><span>중복 후보</span><strong>LG gram 16ZD90Q</strong><small>사례 3건 · 별칭 1개</small></div><Merge /><div><span>대표 모델</span><strong>LG 그램 16ZD90Q</strong><small>사례 12건 · 검증됨</small></div></div><div className="merge-rules"><AlertTriangle /><span><strong>통합 전 확인</strong><small>게시글과 검색 링크는 대표 모델로 이동하며 기존 입력값은 별칭으로 보존됩니다. 자동 삭제되지 않습니다.</small></span></div><Button onClick={() => setMerged(true)} disabled={merged}>{merged ? <><Check />통합 예약됨</> : "대표 모델로 통합"}</Button></div>;
 }
 
-type AuthStep = "choose" | "code" | "profile";
+type AuthStep = "credentials" | "profile";
+type CredentialField = "email" | "password" | "passwordConfirm";
+type CredentialErrors = Partial<Record<CredentialField, string>>;
 
 type AuthResponse = {
   ok?: boolean;
+  code?: string;
   isNewUser?: boolean;
+  onboardingComplete?: boolean;
   redirectTo?: string;
   message?: string;
   warning?: string | null;
   error?: string | { message?: string };
 };
 
+class AuthRequestError extends Error {
+  constructor(message: string, readonly status: number, readonly code?: string) {
+    super(message);
+    this.name = "AuthRequestError";
+  }
+}
+
 function safeLocalPath(candidate: string | null | undefined, fallback = "/my/questions") {
-  return candidate?.startsWith("/") && !candidate.startsWith("//") ? candidate : fallback;
+  if (!candidate?.startsWith("/") || candidate.startsWith("//") || candidate.includes("\\")) return fallback;
+  try {
+    const base = new URL("https://surion.local");
+    const parsed = new URL(candidate, base);
+    return parsed.origin === base.origin ? `${parsed.pathname}${parsed.search}${parsed.hash}` : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function safeAuthNext() {
@@ -232,7 +282,7 @@ function safeAuthNext() {
   return safeLocalPath(new URLSearchParams(window.location.search).get("next"));
 }
 
-async function authRequest(path: string, body: Record<string, unknown>, method: "POST" | "PATCH" = "POST") {
+async function authRequest(path: string, body: Record<string, unknown>, method: "POST" | "PATCH" | "DELETE" = "POST") {
   const response = await fetch(path, {
     method,
     headers: { "Content-Type": "application/json" },
@@ -241,90 +291,126 @@ async function authRequest(path: string, body: Record<string, unknown>, method: 
   const payload = await response.json().catch(() => ({})) as AuthResponse;
   if (!response.ok || payload.ok === false) {
     const serverMessage = typeof payload.error === "string" ? payload.error : payload.error?.message;
-    throw new Error(payload.message || serverMessage || "잠시 후 다시 시도해 주세요.");
+    throw new AuthRequestError(payload.message || serverMessage || "잠시 후 다시 시도해 주세요.", response.status, payload.code);
   }
   return payload;
 }
 
-function KakaoMark() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.5 2 10.8c0 2.7 1.8 5 4.5 6.4l-1 3.6a.5.5 0 0 0 .8.5l4.3-2.9c.5.1.9.1 1.4.1 5.5 0 10-3.5 10-7.7S17.5 3 12 3Z" /></svg>;
+function validateCredentials(mode: "login" | "signup", email: string, password: string, passwordConfirm: string) {
+  const errors: CredentialErrors = {};
+  const normalizedEmail = email.trim();
+  if (!normalizedEmail) errors.email = "이메일을 입력해 주세요.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) errors.email = "이메일 형식을 확인해 주세요.";
+
+  if (!password) errors.password = "비밀번호를 입력해 주세요.";
+  else if (mode === "signup" && password.length < 12) errors.password = "비밀번호는 12자 이상 입력해 주세요.";
+  else if (password.length > 128) errors.password = "비밀번호는 128자 이하로 입력해 주세요.";
+
+  if (mode === "signup") {
+    if (!passwordConfirm) errors.passwordConfirm = "비밀번호를 한 번 더 입력해 주세요.";
+    else if (passwordConfirm !== password) errors.passwordConfirm = "비밀번호가 서로 다릅니다.";
+  }
+  return errors;
 }
 
 export function LoginPage({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const { setRole } = useDemoStore();
-  const [step, setStep] = useState<AuthStep>("choose");
-  const [signupAvatar, setSignupAvatar] = useState<string | null>(null);
+  const [step, setStep] = useState<AuthStep>("credentials");
   const [returnTo, setReturnTo] = useState("");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [credentialErrors, setCredentialErrors] = useState<CredentialErrors>({});
   const [nickname, setNickname] = useState("");
+  const [nicknameError, setNicknameError] = useState("");
   const [isOver14, setIsOver14] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [consentError, setConsentError] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     setHydrated(true);
     setReturnTo(safeAuthNext());
     const params = new URLSearchParams(window.location.search);
-    if (params.get("step") === "profile" || params.get("oauth") === "1") {
-      setStep("profile");
-    }
+    setStep(params.get("step") === "profile" ? "profile" : "credentials");
     const callbackError = params.get("auth_error") || params.get("error");
-    if (callbackError === "not_configured" || callbackError === "AUTH_NOT_CONFIGURED") {
-      setError("현재 로그인 서비스가 준비되지 않았어요. 운영 설정을 확인해 주세요.");
-    } else if (callbackError === "oauth_denied") {
-      setError("카카오 로그인이 취소됐어요. 원할 때 다시 시도해 주세요.");
-    } else if (callbackError) {
-      setError("로그인을 마치지 못했어요. 잠시 후 다시 시도해 주세요.");
-    }
-  }, []);
+    setError(callbackError === "not_configured"
+      ? "현재 로그인 서비스를 사용할 수 없어요. 잠시 후 다시 시도해 주세요."
+      : callbackError
+        ? "로그인을 마치지 못했어요. 이메일과 비밀번호를 다시 확인해 주세요."
+        : "");
+    setCredentialErrors({});
+    setPassword("");
+    setPasswordConfirm("");
+    setShowPassword(false);
+    setShowPasswordConfirm(false);
+  }, [mode]);
 
   function resetFeedback() {
     setError("");
-    setNotice("");
   }
 
-  function startKakao() {
+  function validateCredentialField(field: CredentialField) {
+    const nextErrors = validateCredentials(mode, email, password, passwordConfirm);
+    setCredentialErrors((current) => ({ ...current, [field]: nextErrors[field] }));
+  }
+
+  function changeCredential(field: CredentialField, value: string) {
+    if (field === "email") setEmail(value);
+    if (field === "password") setPassword(value);
+    if (field === "passwordConfirm") setPasswordConfirm(value);
+    setCredentialErrors((current) => field === "password"
+      ? { ...current, password: undefined, passwordConfirm: undefined }
+      : { ...current, [field]: undefined });
     resetFeedback();
-    window.location.assign(`/api/auth/kakao?next=${encodeURIComponent(safeAuthNext())}`);
   }
 
-  async function sendEmailCode(event?: React.FormEvent) {
-    event?.preventDefault();
-    if (!email.trim()) return;
-    setLoading(true);
-    resetFeedback();
-    try {
-      const result = await authRequest("/api/auth/email/start", { email: email.trim().toLowerCase() });
-      setStep("code");
-      setNotice(result.message || "인증번호를 보냈어요. 이메일을 확인해 주세요.");
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "인증번호를 보내지 못했어요.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function verifyEmailCode(event: React.FormEvent) {
+  async function submitCredentials(event: React.FormEvent) {
     event.preventDefault();
-    if (code.length !== 6) {
-      setError("이메일로 받은 6자리 인증번호를 입력해 주세요.");
+    const nextErrors = validateCredentials(mode, email, password, passwordConfirm);
+    setCredentialErrors(nextErrors);
+    const trimmedNickname = nickname.trim();
+    const nicknameInvalid = mode === "signup" && (trimmedNickname.length < 2 || trimmedNickname.length > 20);
+    const consentInvalid = mode === "signup" && (!isOver14 || !termsAccepted || !privacyAccepted);
+    setNicknameError(nicknameInvalid ? "닉네임은 2~20자로 입력해 주세요." : "");
+    setConsentError(consentInvalid ? "가입하려면 필수 항목에 모두 동의해 주세요." : "");
+    resetFeedback();
+    if (Object.keys(nextErrors).length > 0 || nicknameInvalid || consentInvalid) {
+      window.requestAnimationFrame(() => {
+        const firstInvalidId = nextErrors.email
+          ? "auth-email"
+          : nextErrors.password
+            ? "auth-password"
+            : nextErrors.passwordConfirm
+              ? "auth-password-confirm"
+              : nicknameInvalid
+                ? "auth-nickname"
+                : "auth-age";
+        document.getElementById(firstInvalidId)?.focus();
+      });
       return;
     }
+
     setLoading(true);
-    resetFeedback();
     try {
-      const result = await authRequest("/api/auth/email/verify", {
+      const result = await authRequest(`/api/auth/${mode}`, {
         email: email.trim().toLowerCase(),
-        code,
+        password,
+        ...(mode === "signup" ? {
+          nickname: trimmedNickname,
+          isOver14,
+          termsAccepted,
+          privacyAccepted,
+        } : {}),
         next: safeAuthNext(),
       });
-      if (result.isNewUser || result.redirectTo?.startsWith("/signup")) {
+      if (result.onboardingComplete === false || result.redirectTo?.startsWith("/signup")) {
         const next = safeAuthNext();
         const profileUrl = safeLocalPath(result.redirectTo, `/signup?step=profile&next=${encodeURIComponent(next)}`);
         setStep("profile");
@@ -335,7 +421,15 @@ export function LoginPage({ mode }: { mode: "login" | "signup" }) {
       router.push(safeLocalPath(result.redirectTo, safeAuthNext()));
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "인증번호를 확인하지 못했어요.");
+      if (requestError instanceof AuthRequestError && requestError.code === "ACCOUNT_SUSPENDED") {
+        setError("이용이 제한된 계정입니다. 문의가 필요하면 운영자에게 알려 주세요.");
+      } else if (requestError instanceof AuthRequestError && requestError.status >= 500) {
+        setError("현재 로그인 서비스를 사용할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      } else {
+        setError(mode === "login"
+          ? "이메일 또는 비밀번호를 확인해 주세요."
+          : "회원가입을 완료하지 못했어요. 입력 내용을 확인하거나 잠시 후 다시 시도해 주세요.");
+      }
     } finally {
       setLoading(false);
     }
@@ -343,96 +437,136 @@ export function LoginPage({ mode }: { mode: "login" | "signup" }) {
 
   async function completeProfile(event: React.FormEvent) {
     event.preventDefault();
-    if (!isOver14 || !termsAccepted || !privacyAccepted) {
-      setError("필수 확인과 약관에 모두 동의해 주세요.");
-      return;
+    const trimmedNickname = nickname.trim();
+    if (trimmedNickname.length < 2 || trimmedNickname.length > 20) {
+      setNicknameError("닉네임은 2~20자로 입력해 주세요.");
+    } else {
+      setNicknameError("");
     }
-    setLoading(true);
+    if (!isOver14 || !termsAccepted || !privacyAccepted) {
+      setConsentError("가입하려면 필수 항목에 모두 동의해 주세요.");
+    } else {
+      setConsentError("");
+    }
     resetFeedback();
+    if (trimmedNickname.length < 2 || trimmedNickname.length > 20 || !isOver14 || !termsAccepted || !privacyAccepted) return;
+
+    setLoading(true);
     try {
       const result = await authRequest("/api/auth/profile", {
-        nickname: nickname.trim(),
+        nickname: trimmedNickname,
         isOver14,
         termsAccepted,
         privacyAccepted,
-        avatarDataUrl: signupAvatar?.startsWith("data:image/") ? signupAvatar : undefined,
         next: safeAuthNext(),
       });
       setRole("questioner");
       const destination = safeLocalPath(result.redirectTo, safeAuthNext());
-      if (result.warning) {
-        setNotice(`${result.warning} 가입은 정상적으로 완료됐어요.`);
-        window.setTimeout(() => { router.push(destination); router.refresh(); }, 1800);
-      } else {
-        router.push(destination);
-        router.refresh();
-      }
+      router.push(destination);
+      router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "프로필을 만들지 못했어요.");
+      if (requestError instanceof AuthRequestError && requestError.code === "NICKNAME_TAKEN") {
+        setNicknameError("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해 주세요.");
+        window.requestAnimationFrame(() => document.getElementById("auth-nickname")?.focus());
+      } else if (requestError instanceof AuthRequestError && requestError.status >= 500) {
+        setError("프로필을 저장할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      } else {
+        setError(requestError instanceof Error ? requestError.message : "프로필을 만들지 못했어요.");
+      }
     } finally {
       setLoading(false);
     }
   }
 
-  const title = step === "code" ? "인증번호를 입력해 주세요" : step === "profile" ? "수리온 프로필 만들기" : "수리온 시작하기";
-  const description = step === "code"
-    ? `${email}로 보낸 6자리 번호를 입력해 주세요.`
-    : step === "profile"
-      ? "공개 활동에 사용할 닉네임만 정하면 가입이 끝나요."
-      : returnTo.startsWith("/ask")
-        ? "글을 올리고 답변 알림을 받으려면 로그인이 필요해요. 완료 후 작성 화면으로 돌아갑니다."
-        : "이메일 인증번호 하나로 간단히 시작할 수 있어요.";
+  const title = step === "profile" ? "수리온 프로필 만들기" : mode === "login" ? "다시 만나 반가워요" : "수리온에 가입하기";
+  const description = step === "profile"
+    ? "공개 활동에 사용할 닉네임과 필수 항목만 확인하면 끝나요."
+    : returnTo.startsWith("/ask")
+      ? `${mode === "login" ? "로그인" : "가입"} 후 작성 중이던 글 화면으로 바로 돌아갑니다.`
+      : mode === "login"
+        ? "가입한 이메일과 비밀번호로 로그인해 주세요."
+        : "필수 정보만 한 번에 입력하고 수리 경험을 나눠보세요.";
   const showDemoTools = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-  const kakaoEnabled = process.env.NEXT_PUBLIC_KAKAO_AUTH_ENABLED === "true";
-  const isLocalAuth = /^https?:\/\/(127\.0\.0\.1|localhost)(?::|\/)/.test(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
+  const allConsentsAccepted = isOver14 && termsAccepted && privacyAccepted;
+  const nextQuery = returnTo ? `?next=${encodeURIComponent(returnTo)}` : "";
 
   return (
     <div className="auth-page" data-entry={mode}>
       <div className="auth-form-wrap">
-        <div className="auth-form" aria-live="polite">
+        <div className="auth-form">
           <div className="auth-logo"><BrandLogo /></div>
-          {step !== "choose" && step !== "profile" && <button className="auth-back" type="button" onClick={() => { setStep("choose"); setCode(""); resetFeedback(); }}><ArrowLeft />다른 방법으로 시작하기</button>}
-          <span className="eyebrow">{step === "profile" ? "마지막 단계" : step === "code" ? "이메일 확인" : "로그인 · 회원가입"}</span>
+          {step === "credentials" && <nav className={authStyles.tabs} aria-label="로그인과 회원가입 선택">
+            <Link href={`/login${nextQuery}`} aria-current={mode === "login" ? "page" : undefined}>로그인</Link>
+            <Link href={`/signup${nextQuery}`} aria-current={mode === "signup" ? "page" : undefined}>회원가입</Link>
+          </nav>}
+          <span className="eyebrow">{step === "profile" ? "가입 마지막 단계" : mode === "login" ? "로그인" : "회원가입"}</span>
           <h2>{title}</h2>
           <p>{description}</p>
 
           {error && <div className="auth-message auth-error" role="alert">{error}</div>}
-          {notice && <div className="auth-message auth-notice" role="status"><CheckCircle2 />{notice}</div>}
 
-          {step === "choose" && <>
-            <button className="auth-kakao" type="button" onClick={startKakao} disabled={!hydrated || !kakaoEnabled}><KakaoMark />카카오 로그인</button>
-            {!kakaoEnabled && <p className="auth-provider-note">카카오 로그인은 준비 중이에요. 지금은 이메일로 이용해 주세요.</p>}
-            <div className="auth-divider"><span>또는 이메일로 계속</span></div>
-            <form className="auth-email-form" onSubmit={sendEmailCode}>
-              <label htmlFor="auth-email">이메일</label>
-              <div className="auth-email-row"><Mail /><input id="auth-email" required type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" inputMode="email" placeholder="example@email.com" disabled={!hydrated} /><Button type="submit" disabled={!hydrated || loading}>{loading ? <LoaderCircle className="spin" /> : null}인증번호 받기</Button></div>
+          {step === "credentials" && <>
+            <form className={authStyles.credentialForm} onSubmit={submitCredentials} noValidate>
+              <div className={authStyles.fieldGroup}>
+                <label htmlFor="auth-email">이메일</label>
+                <input id="auth-email" type="email" value={email} onChange={(event) => changeCredential("email", event.target.value)} onBlur={() => validateCredentialField("email")} autoComplete="email" inputMode="email" placeholder="example@email.com" disabled={!hydrated || loading} aria-invalid={Boolean(credentialErrors.email)} aria-describedby={credentialErrors.email ? "auth-email-error" : undefined} autoFocus />
+                {credentialErrors.email && <p className={authStyles.fieldError} id="auth-email-error">{credentialErrors.email}</p>}
+              </div>
+              <div className={authStyles.fieldGroup}>
+                <label htmlFor="auth-password">비밀번호</label>
+                <div className={authStyles.passwordField}>
+                  <input id="auth-password" type={showPassword ? "text" : "password"} value={password} onChange={(event) => changeCredential("password", event.target.value)} onBlur={() => validateCredentialField("password")} autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder={mode === "signup" ? "12자 이상 입력해 주세요" : "비밀번호를 입력해 주세요"} disabled={!hydrated || loading} aria-invalid={Boolean(credentialErrors.password)} aria-describedby={credentialErrors.password ? "auth-password-error" : mode === "signup" ? "auth-password-help" : undefined} />
+                  <button type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"} aria-pressed={showPassword} disabled={loading}>{showPassword ? <EyeOff /> : <Eye />}</button>
+                </div>
+                {mode === "signup" && !credentialErrors.password && <p className={authStyles.fieldHint} id="auth-password-help">12자 이상의 긴 문장을 권장해요. 다른 서비스와 겹치지 않게 만들어 주세요.</p>}
+                {credentialErrors.password && <p className={authStyles.fieldError} id="auth-password-error">{credentialErrors.password}</p>}
+              </div>
+              {mode === "signup" && <div className={authStyles.fieldGroup}>
+                <label htmlFor="auth-password-confirm">비밀번호 확인</label>
+                <div className={authStyles.passwordField}>
+                  <input id="auth-password-confirm" type={showPasswordConfirm ? "text" : "password"} value={passwordConfirm} onChange={(event) => changeCredential("passwordConfirm", event.target.value)} onBlur={() => validateCredentialField("passwordConfirm")} autoComplete="new-password" placeholder="비밀번호를 한 번 더 입력해 주세요" disabled={!hydrated || loading} aria-invalid={Boolean(credentialErrors.passwordConfirm)} aria-describedby={credentialErrors.passwordConfirm ? "auth-password-confirm-error" : undefined} />
+                  <button type="button" onClick={() => setShowPasswordConfirm((current) => !current)} aria-label={showPasswordConfirm ? "비밀번호 확인 숨기기" : "비밀번호 확인 표시"} aria-pressed={showPasswordConfirm} disabled={loading}>{showPasswordConfirm ? <EyeOff /> : <Eye />}</button>
+                </div>
+                {credentialErrors.passwordConfirm && <p className={authStyles.fieldError} id="auth-password-confirm-error">{credentialErrors.passwordConfirm}</p>}
+              </div>}
+              {mode === "signup" && <>
+                <div className={authStyles.fieldGroup}>
+                  <label htmlFor="auth-nickname">닉네임</label>
+                  <input id="auth-nickname" minLength={2} maxLength={20} value={nickname} onChange={(event) => { setNickname(event.target.value); setNicknameError(""); resetFeedback(); }} onBlur={() => setNicknameError(nickname.trim().length >= 2 && nickname.trim().length <= 20 ? "" : "닉네임은 2~20자로 입력해 주세요.")} autoComplete="nickname" placeholder="2~20자로 입력해 주세요" disabled={!hydrated || loading} aria-invalid={Boolean(nicknameError)} aria-describedby={nicknameError ? "auth-nickname-error" : "auth-nickname-help"} />
+                  {nicknameError ? <p className={authStyles.fieldError} id="auth-nickname-error">{nicknameError}</p> : <p className={authStyles.fieldHint} id="auth-nickname-help">게시글과 댓글에 공개됩니다. 실명은 입력하지 않아도 돼요.</p>}
+                </div>
+                <fieldset className={authStyles.consentFieldset}>
+                  <legend>필수 확인 및 동의</legend>
+                  <div className="auth-consent-list">
+                    <div className="auth-consent-row"><input id="auth-age" type="checkbox" checked={isOver14} onChange={(event) => { setIsOver14(event.target.checked); setConsentError(""); }} disabled={loading} /><label htmlFor="auth-age"><strong>[필수]</strong> 만 14세 이상입니다.</label></div>
+                    <div className="auth-consent-row"><input id="auth-terms" type="checkbox" checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); setConsentError(""); }} disabled={loading} /><label htmlFor="auth-terms"><strong>[필수]</strong> 이용약관에 동의합니다.</label><Link href="/terms" target="_blank">보기</Link></div>
+                    <div className="auth-consent-row"><input id="auth-privacy" type="checkbox" checked={privacyAccepted} onChange={(event) => { setPrivacyAccepted(event.target.checked); setConsentError(""); }} disabled={loading} /><label htmlFor="auth-privacy"><strong>[필수]</strong> 개인정보 수집·이용에 동의합니다.</label><Link href="/privacy" target="_blank">보기</Link></div>
+                  </div>
+                  {consentError && <p className={authStyles.consentError} role="alert">{consentError}</p>}
+                </fieldset>
+              </>}
+              <Button className={authStyles.submitButton} type="submit" disabled={!hydrated || loading}>{loading && <LoaderCircle className="spin" />}{loading ? mode === "login" ? "로그인 중" : "가입 중" : mode === "login" ? "로그인" : "가입 완료"}</Button>
             </form>
-            <p className="auth-privacy-note"><Lock />카카오 프로필 사진은 자동으로 공개하지 않으며, 전화번호·성별·주소를 받지 않습니다.</p>
-            <Link className="auth-browse-link" href="/community">가입하지 않고 둘러보기</Link>
+            <p className={authStyles.accountPrompt}>{mode === "login" ? "아직 계정이 없나요?" : "이미 계정이 있나요?"}<Link href={`/${mode === "login" ? "signup" : "login"}${nextQuery}`}>{mode === "login" ? "회원가입" : "로그인"}</Link></p>
+            <Link className="auth-browse-link" href="/community">비회원 둘러보기</Link>
           </>}
 
-          {step === "code" && <form className="auth-code-form" onSubmit={verifyEmailCode}>
-            <label htmlFor="auth-code">이메일 인증번호</label>
-            <input id="auth-code" className="auth-code-input" required value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} placeholder="000000" aria-describedby="auth-code-help" autoFocus />
-            <div className="auth-code-help" id="auth-code-help"><span>인증번호는 10분 동안 사용할 수 있어요.</span><button type="button" disabled={!hydrated || loading} onClick={() => void sendEmailCode()}>인증번호 다시 받기</button></div>
-            {isLocalAuth && <a className="auth-local-mail" href="http://127.0.0.1:54324" target="_blank" rel="noreferrer">개발용 메일함에서 인증번호 확인</a>}
-            <Button type="submit" disabled={!hydrated || loading || code.length !== 6}>{loading && <LoaderCircle className="spin" />}인증하고 계속</Button>
-          </form>}
-
           {step === "profile" && <form className="auth-profile-form" onSubmit={completeProfile}>
-            <ProfilePhotoPicker name={nickname || "새 회원"} value={signupAvatar} onChange={setSignupAvatar} />
             <label htmlFor="auth-nickname">닉네임</label>
-            <input id="auth-nickname" required minLength={2} maxLength={20} value={nickname} onChange={(event) => setNickname(event.target.value)} autoComplete="nickname" placeholder="2~20자로 입력해 주세요" />
-            <p className="auth-field-help">게시글과 댓글에 공개됩니다. 실명은 입력하지 않아도 돼요.</p>
+            <input id="auth-nickname" minLength={2} maxLength={20} value={nickname} onChange={(event) => { setNickname(event.target.value); setNicknameError(""); resetFeedback(); }} onBlur={() => setNicknameError(nickname.trim().length >= 2 && nickname.trim().length <= 20 ? "" : "닉네임은 2~20자로 입력해 주세요.")} autoComplete="nickname" placeholder="2~20자로 입력해 주세요" aria-invalid={Boolean(nicknameError)} aria-describedby={nicknameError ? "auth-nickname-error" : "auth-nickname-help"} autoFocus />
+            {nicknameError ? <p className={authStyles.fieldError} id="auth-nickname-error">{nicknameError}</p> : <p className="auth-field-help" id="auth-nickname-help">게시글과 댓글에 공개됩니다. 실명은 입력하지 않아도 돼요.</p>}
+            <p className={authStyles.profilePhotoLater}>프로필 사진은 가입 후 설정에서 원할 때 추가할 수 있어요.</p>
             <div className="auth-consent-list" aria-label="필수 확인 및 약관 동의">
-              <div className="auth-consent-row"><input id="auth-age" type="checkbox" required checked={isOver14} onChange={(event) => setIsOver14(event.target.checked)} /><label htmlFor="auth-age"><strong>[필수]</strong> 만 14세 이상입니다.</label></div>
-              <div className="auth-consent-row"><input id="auth-terms" type="checkbox" required checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} /><label htmlFor="auth-terms"><strong>[필수]</strong> 이용약관에 동의합니다.</label><Link href="/terms" target="_blank">보기</Link></div>
-              <div className="auth-consent-row"><input id="auth-privacy" type="checkbox" required checked={privacyAccepted} onChange={(event) => setPrivacyAccepted(event.target.checked)} /><label htmlFor="auth-privacy"><strong>[필수]</strong> 개인정보처리방침에 동의합니다.</label><Link href="/privacy" target="_blank">보기</Link></div>
+              <div className={`${authStyles.consentAll} auth-consent-row`}><input id="auth-all" type="checkbox" checked={allConsentsAccepted} onChange={(event) => { const checked = event.target.checked; setIsOver14(checked); setTermsAccepted(checked); setPrivacyAccepted(checked); setConsentError(""); }} /><label htmlFor="auth-all">필수 항목 모두 동의</label></div>
+              <div className="auth-consent-row"><input id="auth-age" type="checkbox" checked={isOver14} onChange={(event) => { setIsOver14(event.target.checked); setConsentError(""); }} /><label htmlFor="auth-age"><strong>[필수]</strong> 만 14세 이상입니다.</label></div>
+              <div className="auth-consent-row"><input id="auth-terms" type="checkbox" checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); setConsentError(""); }} /><label htmlFor="auth-terms"><strong>[필수]</strong> 이용약관에 동의합니다.</label><Link href="/terms" target="_blank">보기</Link></div>
+              <div className="auth-consent-row"><input id="auth-privacy" type="checkbox" checked={privacyAccepted} onChange={(event) => { setPrivacyAccepted(event.target.checked); setConsentError(""); }} /><label htmlFor="auth-privacy"><strong>[필수]</strong> 개인정보 수집·이용에 동의합니다.</label><Link href="/privacy" target="_blank">보기</Link></div>
             </div>
-            <Button type="submit" disabled={!hydrated || loading || nickname.trim().length < 2}>{loading && <LoaderCircle className="spin" />}가입 완료</Button>
+            {consentError && <p className={authStyles.consentError} role="alert">{consentError}</p>}
+            <Button type="submit" disabled={!hydrated || loading}>{loading && <LoaderCircle className="spin" />}{loading ? "프로필 저장 중" : "가입 완료"}</Button>
           </form>}
 
-          {step === "choose" && showDemoTools && <details className="auth-dev-tools"><summary>개발용 데모 화면</summary><div className="demo-logins"><button type="button" onClick={() => { setRole("questioner"); router.push("/my/questions"); }}><CircleUserRound />일반 사용자</button><button type="button" onClick={() => { setRole("expert"); router.push("/expert"); }}><BadgeCheck />전문가</button><button type="button" onClick={() => { setRole("admin"); router.push("/admin/users"); }}><ShieldCheck />관리자</button></div></details>}
+          {step === "credentials" && showDemoTools && <details className="auth-dev-tools"><summary>개발용 데모 화면</summary><div className="demo-logins"><button type="button" onClick={() => { setRole("questioner"); router.push("/my/questions"); }}><CircleUserRound />일반 사용자</button><button type="button" onClick={() => { setRole("expert"); router.push("/expert"); }}><BadgeCheck />전문가</button><button type="button" onClick={() => { setRole("admin"); router.push("/admin/users"); }}><ShieldCheck />관리자</button></div></details>}
         </div>
       </div>
     </div>
@@ -443,8 +577,8 @@ export function StaticPage({ type }: { type: string }) {
   const data: Record<string, [string, string, string[]]> = {
     about: ["수리온 소개", "고장 경험을 공개 지식으로 바꿉니다.", ["제품 모델을 지정해 질문이나 해결 경험을 올립니다.", "모든 사용자가 같은 댓글 공간에서 자유롭게 대화합니다.", "필요한 경우 공개 활동을 확인한 뒤 전문가에게 수리를 요청합니다.", "여러 사람의 실제 원인과 해결 결과가 쌓이고, 나중에 모델·증상별로 연결됩니다."]],
     safety: ["안전 가이드", "직접 확인은 안전한 범위까지만 해주세요.", ["점검 전 제품 전원과 플러그를 분리하세요.", "배터리 팽창, 타는 냄새, 연기, 물기에는 즉시 사용을 중단하세요.", "고전압·가스·냉매·회전날·리튬 배터리는 전문가에게 맡기세요.", "공개 사진에 주소, 전화번호, 송장, 얼굴이 없는지 확인하세요."]],
-    terms: ["이용약관", "수리온 MVP 이용 원칙", ["공개 댓글은 참고 정보이며 안전을 보장하는 전문 진단을 대체하지 않습니다.", "연락처만 남기는 광고성 댓글과 위험한 수리 안내는 제한됩니다.", "실제 결제와 정산은 현재 제공하지 않습니다."]],
-    privacy: ["개인정보처리방침", "공개 정보와 비공개 정보를 구분합니다.", ["게시글과 댓글은 공개되며 검색 가능한 기록으로 남습니다.", "프로필 사진은 선택 사항이며 올리지 않으면 공통 기본 이미지가 표시됩니다.", "최근 접속이나 현재 활동 여부는 다른 사용자에게 공개하지 않습니다.", "주소, 전화번호, 요청 세부사항은 수리 요청 당사자만 볼 수 있습니다."]],
+    terms: ["이용약관", "수리온 공개 MVP 이용 원칙", ["계정은 본인이 관리할 수 있는 이메일로 만들고 다른 사람의 계정을 사용하지 않습니다.", "공개 댓글은 참고 정보이며 안전을 보장하는 전문 진단을 대체하지 않습니다.", "연락처만 남기는 광고성 댓글, 개인정보 노출, 위험한 수리 안내는 제한됩니다.", "회원은 설정에서 탈퇴할 수 있습니다. 공용 게시글 저장 기능을 열기 전 공개 글·댓글의 익명화와 보존 기준을 별도로 확정합니다.", "실제 결제와 정산은 현재 제공하지 않습니다."]],
+    privacy: ["개인정보처리방침", "필요한 정보만 받고 공개 범위를 분명히 합니다.", ["필수 정보는 이메일, 공개 닉네임, 만 14세 이상 확인과 필수 동의 기록입니다. 비밀번호는 원문이 아니라 인증용 해시로 저장됩니다.", "로그인과 보안을 위해 세션 쿠키, 접속 IP와 브라우저 정보가 생성될 수 있습니다. 프로필 사진과 소개는 선택 사항입니다.", "계정 정보는 로그인·계정 관리·부정 이용 방지를 위해 회원 탈퇴 시까지 보관하고, 관계 법령상 의무가 있는 경우에만 정해진 기간 동안 별도로 보관합니다.", "닉네임, 선택한 사진·소개, 향후 작성할 게시글과 댓글은 공개될 수 있습니다. 이메일, 세션 정보와 현재 접속 상태는 다른 사용자에게 공개하지 않습니다.", "계정 데이터는 Vercel을 통해 연결한 Neon Postgres에, 선택 프로필 사진은 Vercel Blob에 저장합니다. 정식 운영 전 처리위탁·국외 이전 세부사항과 운영자 문의처를 법률 검토 후 고지합니다.", "전화번호·성별·주소는 가입 과정에서 받지 않습니다. 설정에서 프로필을 수정하거나 현재 비밀번호 확인 후 계정과 프로필 사진을 삭제할 수 있습니다."]],
   };
   const [title, subtitle, items] = data[type] ?? data.about;
   return <div className="static-page page-wrap"><div className="container narrow-container"><span className="eyebrow">수리온 원칙</span><h1>{title}</h1><p className="static-lead">{subtitle}</p><div className="static-list">{items.map((item, index) => <div key={item}><span>{String(index + 1).padStart(2, "0")}</span><p>{item}</p></div>)}</div><Link className="button button-primary" href="/">홈으로 돌아가기</Link></div></div>;

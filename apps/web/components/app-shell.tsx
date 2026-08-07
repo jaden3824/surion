@@ -26,7 +26,8 @@ export function AppShell({ children, viewer }: { children: React.ReactNode; view
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       if (!response.ok) throw new Error("logout failed");
-      window.location.assign("/");
+      router.replace("/");
+      router.refresh();
     } catch {
       setLoggingOut(false);
       window.alert("로그아웃하지 못했습니다. 잠시 후 다시 시도해 주세요.");

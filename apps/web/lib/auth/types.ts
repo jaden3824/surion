@@ -5,4 +5,5 @@ export type AuthViewer = {
   avatarUrl: string | null;
   email: string | null;
   isAdmin: boolean;
+  isSuspended: boolean;
 };

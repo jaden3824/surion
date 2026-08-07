@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { contentPersistenceUnavailable, requireContentWriter } from "@/app/api/v1/_shared";
 
 const resolutionSchema = z.object({
   caseId: z.string().uuid(),
@@ -14,11 +14,13 @@ const resolutionSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const input = resolutionSchema.safeParse(await request.json());
+  const access = await requireContentWriter();
+  if (!access.ok) return access.response;
+
+  const input = resolutionSchema.safeParse(await request.json().catch(() => null));
   if (!input.success) return NextResponse.json({ error: input.error.flatten() }, { status: 400 });
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return NextResponse.json({ data: input.data, mode: "demo" }, { status: 201 });
-  const { data, error } = await supabase.rpc("resolve_case", { p_case_id: input.data.caseId, p_resolution: input.data });
-  if (error) return NextResponse.json({ error: error.message }, { status: 403 });
-  return NextResponse.json({ data }, { status: 201 });
+
+  // Resolving a post must compare the authenticated user with the post author.
+  // The post table is intentionally not migrated in this auth-only release.
+  return contentPersistenceUnavailable();
 }
