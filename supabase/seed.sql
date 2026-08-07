@@ -1,0 +1,3 @@
+-- Intentionally empty.
+-- Create local test accounts through the normal sign-up flow so this repository
+-- never ships reusable passwords or privileged demo credentials.
