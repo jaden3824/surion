@@ -108,7 +108,7 @@ test("로그인은 익숙한 이메일·비밀번호 흐름과 일반화된 오�
   await expect(page).toHaveURL(/\/login\?next=%2Fask$/);
 });
 
-test("회원가입은 비밀번호 확인을 즉시 검증하고 처리 중 중복 제출을 막는다", async ({ page }) => {
+test("회원가입은 비밀번호 확인을 즉시 검증하고 처리 중 중복 제출을 막는다", async ({ page, isMobile }) => {
   let submittedSignup: Record<string, unknown> | undefined;
   let releaseResponse!: () => void;
   let markRequestStarted!: () => void;
@@ -128,6 +128,8 @@ test("회원가입은 비밀번호 확인을 즉시 검증하고 처리 중 중�
 
   await page.goto("/signup?next=%2Fask", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "수리온에 가입하기" })).toBeVisible();
+  const formBounds = await page.locator(".auth-form").boundingBox();
+  expect(formBounds?.width).toBeGreaterThan(isMobile ? 340 : 400);
   const email = page.getByRole("textbox", { name: "이메일" });
   const password = page.getByLabel("비밀번호", { exact: true });
   const passwordConfirm = page.getByLabel("비밀번호 확인", { exact: true });

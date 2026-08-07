@@ -923,8 +923,8 @@ h1, h2, h3 { font-weight: 720; }
 .auth-brand > div { margin-top: 26px; display: flex; flex-direction: column; gap: 11px; }
 .auth-brand > div span { display: flex; align-items: center; gap: 8px; color: #e0e7f2; font-size: 13px; }
 .auth-brand > div svg { width: 16px; color: var(--mint); }
-.auth-form-wrap { min-height: 100dvh; padding: 48px 20px; display: grid; place-items: center; }
-.auth-form { width: min(440px, 100%); padding: 38px 40px; border: 1px solid #dde2e9; border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(23, 37, 61, .06); }
+.auth-form-wrap { min-height: 100dvh; padding: 48px 20px; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; }
+.auth-form { width: 100%; max-width: 440px; padding: 38px 40px; border: 1px solid #dde2e9; border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(23, 37, 61, .06); }
 .auth-logo { margin: 0 0 34px; display: flex; justify-content: center; }
 .auth-logo .brand-wordmark { width: auto; height: 52px; }
 .auth-form h2 { margin: 0; font-size: 28px; letter-spacing: -.035em; }
